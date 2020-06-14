@@ -1,10 +1,10 @@
 # Jellyfin Metapackages
 
-This repository contains the various Jellyfin metapackage definitions. With the build split for the 10.6.0 release, the [main server](https://github.com/jellyfin/jellyfin) and [web client](https://github.com/jellyfin/jellyfin-web) are build separately in order to ensure that both of them are unique and there is no built-time cross dependencies between the two repositories. This simplifies building for releases, as well as enables per-PR "unstable" builds as opposed to timed "daily" builds.
+This repository contains the various Jellyfin metapackage definitions. With the build split for the 10.6.0 release, the [main server](https://github.com/jellyfin/jellyfin) and [web client](https://github.com/jellyfin/jellyfin-web) are built separately, in order to ensure that both of them are unique and there is no built-time cross dependencies between the two repositories. This simplifies building for releases, as well as enables per-PR "unstable" builds as opposed to timed "daily" builds.
 
 ## Debian
 
-This is a simple `equivs-build` definition which will build a Debian metapackage for the [`jellyfin-server`](https://github.com/jellyfin/jellyfin) and [`jellyfin-web`](https://github.com/jellyfin/jellyfin-web) `.deb` files.
+This is a simple `equivs-build` definition which will build a Debian metapackage for the [`jellyfin-server`](https://github.com/jellyfin/jellyfin) and [`jellyfin-web`](https://github.com/jellyfin/jellyfin-web) `.deb` files. By design, there is no restrictions on the version of the dependency packages; this ensure that this metapackage will always install the latest version of these two packages and simplifies the management of this file, especially for the per-PR "unstable" builds.
 
 The version indicator in this file is the invalid placeholder `X.Y.Z`. This must be replaced with a real version at build time, e.g. with `sed -i 's/X.Y.Z/10.6.0/g' jellyfin.debian`.
 
