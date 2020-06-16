@@ -18,4 +18,36 @@ Changes to the Docker dependencies at runtime should go here; only build-specifi
 
 There is no version indicator in these Dockerfiles; this is only relevant in the naming when run from CI.
 
-The Dockerfiles are built with the following command `docker build -t jellyfin-{version} --build-arg TARGET_RELEASE=stable -f Dockerfile.{arch} .`, replacing `stable` with `unstable` if required.
+The Dockerfiles are built with the following commands. This will be done through CI, either on our build server or Azure:
+
+#### Stable
+
+```
+docker build -t jellyfin:{version}-{arch} --build-arg TARGET_RELEASE=stable -f Dockerfile.{arch} .
+docker manifest create --amend jellyfin:{version} \
+    jellyfin:{version}-amd64 \
+    jellyfin:{version}-arm64 \
+    jellyfin:{version}-armhf
+docker manifest push --purge jellyfin:{version}
+docker manifest create --amend jellyfin:latest \
+    jellyfin:{version}-amd64 \
+    jellyfin:{version}-arm64 \
+    jellyfin:{version}-armhf
+docker manifest push --purge jellyfin:latest
+```
+
+#### Unstable
+
+```
+docker build -t jellyfin:{build_id}-{arch} --build-arg TARGET_RELEASE=unstable -f Dockerfile.{arch} .
+docker manifest create --amend jellyfin:unstable-{build_id} \
+    jellyfin:{version}-amd64 \
+    jellyfin:{version}-arm64 \
+    jellyfin:{version}-armhf
+docker manifest push --purge jellyfin:unstable-{version}
+docker manifest create --amend jellyfin:unstable \
+    jellyfin:{version}-amd64 \
+    jellyfin:{version}-arm64 \
+    jellyfin:{version}-armhf
+docker manifest push --purge jellyfin:unstable
+```
