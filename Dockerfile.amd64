@@ -1,12 +1,9 @@
-# Our base is Debian Buster (10.x)
-ARG DISTRIBUTION_RELEASE=buster
-
 # By default build for stable; unstable must set this explicitly
 ARG TARGET_RELEASE=stable
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM debian:${DISTRIBUTION_RELEASE}-slim
+FROM debian:buster-slim
 COPY --from=server /jellyfin /jellyfin
 COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
@@ -17,7 +14,7 @@ ARG DISTRIBUTION_RELEASE
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg wget apt-transport-https \
  && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
- && echo "deb [arch=amd64] https://repo.jellyfin.org/debian ${DISTRIBUTION_RELEASE} main" > /etc/apt/sources.list.d/jellyfin.list \
+ && echo "deb [arch=amd64] https://repo.jellyfin.org/debian buster main" > /etc/apt/sources.list.d/jellyfin.list \
  && cat /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
