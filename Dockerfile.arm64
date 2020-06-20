@@ -4,12 +4,14 @@ ARG DISTRIBUTION_RELEASE=buster
 # By default build for stable; unstable must set this explicitly
 ARG TARGET_RELEASE=stable
 
-FROM jellyfin-server-${TARGET_RELEASE}:amd64 as server
-FROM jellyfin-web-${TARGET_RELEASE}:all as web
+FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-arm64 as server
+FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM arm64v8/debian:${DISTRIBUTION_RELEASE}-slim
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 COPY --from=server /jellyfin /jellyfin
 COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
+
+ARG DISTRIBUTION_RELEASE
 
 # Install dependencies:
 #   libomxil-bellagio0: needed for OpenMax IL
