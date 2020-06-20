@@ -4,6 +4,7 @@ ARG DISTRIBUTION_RELEASE=buster
 # By default build for stable; unstable must set this explicitly
 ARG TARGET_RELEASE=stable
 
+FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-arm64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM arm64v8/debian:${DISTRIBUTION_RELEASE}-slim
@@ -18,7 +19,7 @@ ARG DISTRIBUTION_RELEASE
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg wget apt-transport-https \
  && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
- && echo 'deb [arch=arm64] https://repo.jellyfin.org/debian ${DISTRIBUTION_RELEASE} main' > /etc/apt/sources.list.d/jellyfin.list && \
+ && echo 'deb [arch=arm64] https://repo.jellyfin.org/debian ${DISTRIBUTION_RELEASE} main' > /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y libomxil-bellagio0 libomxil-bellagio-bin jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
  && apt-get remove gnupg wget apt-transport-https -y \
