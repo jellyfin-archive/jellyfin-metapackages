@@ -7,8 +7,6 @@ FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM arm64v8/debian:buster-slim
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
-ARG DISTRIBUTION_RELEASE
-
 # Install dependencies:
 #   libomxil-bellagio0: needed for OpenMax IL
 RUN apt-get update \
