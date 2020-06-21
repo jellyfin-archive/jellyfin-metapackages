@@ -6,8 +6,6 @@ FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-armhf as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM arm32v7/debian:buster-slim
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
-COPY --from=server /jellyfin /jellyfin
-COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
 ARG DISTRIBUTION_RELEASE
 
@@ -30,6 +28,9 @@ RUN apt-get update \
  && mkdir -p /cache /config /media \
  && chmod 777 /cache /config /media \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
+
+COPY --from=server /jellyfin /jellyfin
+COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 ENV LC_ALL en_US.UTF-8
