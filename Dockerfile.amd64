@@ -5,12 +5,25 @@ FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM debian:buster-slim
 
+# Default environment variables for the Jellyfin invocation
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
+    LC_ALL="en_US.UTF-8" \
+    LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    JELLYFIN_MEDIA_DIR="/media" \
+    JELLYFIN_DATA_DIR="/config" \
+    JELLYFIN_CACHE_DIR="/cache" \
+    JELLYFIN_CONFIG_DIR="/config/config" \
+    JELLYFIN_LOG_DIR="/config/log" \
+    JELLYFIN_WEB_DIR="/jellyfin/jellyfin-web" \
+    JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
+
 # Install dependencies:
 #   mesa-va-drivers: needed for AMD VAAPI
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg wget apt-transport-https \
  && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
- && echo "deb [arch=amd64] https://repo.jellyfin.org/debian buster main" > /etc/apt/sources.list.d/jellyfin.list \
+ && echo 'deb [arch=amd64] https://repo.jellyfin.org/debian buster main' > /etc/apt/sources.list.d/jellyfin.list \
  && cat /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
@@ -18,21 +31,13 @@ RUN apt-get update \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
- && mkdir -p /cache /config /media \
- && chmod 777 /cache /config /media \
+ && mkdir -p ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
+ && chmod 777 ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
 COPY --from=server /jellyfin /jellyfin
 COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-
 EXPOSE 8096
-VOLUME /cache /config /media
-ENTRYPOINT [ "/jellyfin/jellyfin", \
-			 "--datadir", "/config", \
-			 "--cachedir", "/cache", \
-			 "--ffmpeg", "/usr/lib/jellyfin-ffmpeg/ffmpeg" ]
+VOLUME ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
+ENTRYPOINT [ "/jellyfin/jellyfin" ]
