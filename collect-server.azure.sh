@@ -375,11 +375,13 @@ do_docker_meta() {
 
     # During a real release, we must check that both builder images are up; if one isn't, we're the first one done (or it failed), so return
     if [[ -z ${is_unstable} ]]; then
-        server_ok="n"
-        web_ok="n"
-        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/${version} >/dev/null && server_ok="y"
+        server_ok=""
+        web_ok=""
+        for arch in ${docker_arches[@]}; do
+            curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/${version}-${arch} >/dev/null && server_ok="${server_ok}y"
+        done
         curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-web/tags/${version} >/dev/null && web_ok="y"
-        if [[ ${server_ok} != "y" || ${web_ok} != "y" ]]; then
+        if [[ ${server_ok} != "yyy" || ${web_ok} != "y" ]]; then
             return
         fi
     fi
