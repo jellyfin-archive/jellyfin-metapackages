@@ -377,10 +377,8 @@ do_docker_meta() {
     if [[ -z ${is_unstable} ]]; then
         server_ok="n"
         web_ok="n"
-        for arch in ${docker_arches[@]}; do
-            curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/stable-${build_id}-${arch} >/dev/null && server_ok="y" || server_ok="n"
-        done
-        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-web/tags/stable-${build_id} >/dev/null && web_ok="y" || web_ok="n"
+        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/${version} >/dev/null && server_ok="y"
+        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-web/tags/${version} >/dev/null && web_ok="y"
         if [[ ${server_ok} != "y" || ${web_ok} != "y" ]]; then
             return
         fi
