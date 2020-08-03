@@ -392,7 +392,7 @@ do_docker_meta() {
 
     if [[ -z ${is_unstable} ]]; then
         group_tag="latest"
-        release_tag="stable"
+        release_tag="${version}"
         cversion="${version}"
     else
         group_tag="unstable"
