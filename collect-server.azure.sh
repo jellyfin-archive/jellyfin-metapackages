@@ -189,7 +189,11 @@ do_combine_portable() {
     linkdir="${stability}/combined"
 
     our_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${servertype}*.${filetype}" | head -1 )"
-    partner_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
+    if [[ -z ${is_unstable} ]]; then
+        partner_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*${version}*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
+    else
+        partner_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
+    fi
 
     if [[ ! -f ${partner_archive} ]]; then
         return
