@@ -144,7 +144,7 @@ do_files() {
     if [[ -L ${filedir}/${linkdir}/${servertype} ]]; then
         rm -f ${filedir}/${linkdir}/${servertype}
     fi
-    ln -s ${filedir}/${releasedir} ${filedir}/${linkdir}/${servertype}
+    ln -s ../${releasedir} ${filedir}/${linkdir}/${servertype}
     echo "Copying files"
     cp ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
@@ -258,7 +258,7 @@ do_combine_portable() {
     if [[ -L ${filedir}/${linkdir} ]]; then
         rm -f ${filedir}/${linkdir}
     fi
-    ln -s ${filedir}/versions/${stability}/combined/${version} ${filedir}/${linkdir}
+    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}
 
     echo "Cleaning up"
     rm -rf ${tempdir}
@@ -356,7 +356,7 @@ do_deb_meta() {
     if [[ -L ${filedir}/${linkdir}/meta ]]; then
         rm -f ${filedir}/${linkdir}/meta
     fi
-    ln -s ${filedir}/${releasedir} ${filedir}/${linkdir}/meta
+    ln -s ../${releasedir} ${filedir}/${linkdir}/meta
     echo "Copying files"
     mv ./*.deb ${filedir}/${releasedir}/
     echo "Creating sha256sums"
