@@ -5,8 +5,8 @@
 
 logfile="/var/log/build/collect-azure.log"
 exec 2>>${logfile}
-exec 1>>${logfile}
-exec 3>&1
+#exec 1>>${logfile}
+#exec 3>&1
 
 # Ensure we're running as root (i.e. sudo $0)
 if [[ $( whoami ) != 'root' ]]; then
