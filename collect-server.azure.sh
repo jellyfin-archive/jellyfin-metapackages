@@ -146,7 +146,7 @@ do_files() {
     fi
     ln -s ../${releasedir} ${filedir}/${linkdir}/${servertype}
     echo "Copying files"
-    cp ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
+    mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*; do
         sha256sum ${file} > ${file}.sha256sum
