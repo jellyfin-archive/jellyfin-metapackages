@@ -430,7 +430,12 @@ do_docker_meta() {
     # This minimizes the amount of time that an alternative Docker image could be uploaded,
     # thus resulting in inconsistencies with these images. By doing these in parallel they
     # grap upstream as soon as possible then can take as long as they need.
-    wait $( jobs -rp )
+    echo -n "Waiting for docker builds..."
+    while pgrep "docker build"; do
+        sleep 15
+        echo -n "."
+    done
+    echo " done."
 
     # Push the images
     for arch in ${docker_arches[@]}; do
