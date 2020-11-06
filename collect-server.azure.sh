@@ -605,7 +605,7 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
         link_name="jellyfin-openapi-unstable"
     fi
     mkdir -p ${api_dir}
-    if ! diff -q ${indir}/${build_id}/openapi.json ${api_root}/${link_name} &>/dev/null; then
+    if ! diff -q ${indir}/${build_id}/openapi.json ${api_root}/${link_name}.json &>/dev/null; then
         # Only replace the OpenAPI spec if they differ
         mv ${indir}/${build_id}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
         if [[ -L ${api_root}/${link_name}.json ]]; then
