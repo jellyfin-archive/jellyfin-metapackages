@@ -460,6 +460,8 @@ do_docker_meta() {
     done
     docker image prune --force 1>&2
 
+    find /var/log/build/docker-combined -mtime +7 -exec rm {} \;
+
     popd 1>&2
 }
 
