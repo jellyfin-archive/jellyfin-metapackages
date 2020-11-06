@@ -149,6 +149,9 @@ do_files() {
     mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*; do
+        if [[ ${file} =~ "*.sha256sum" ]]; then
+            continue
+        fi
         sha256sum ${file} > ${file}.sha256sum
     done
     echo "Cleaning repository"
@@ -361,6 +364,9 @@ do_deb_meta() {
     mv ./*.deb ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*.deb; do
+        if [[ ${file} =~ "*.sha256sum" ]]; then
+            continue
+        fi
         sha256sum ${file} > ${file}.sha256sum
     done
     echo "Cleaning repository"
