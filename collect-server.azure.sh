@@ -585,7 +585,7 @@ if [[ -z ${skip_docker} ]]; then
     do_docker_meta
 fi
 
-if [[ -f ${indir}/openapi.json ]]; then
+if [[ -f ${indir}/${build_id}/openapi.json ]]; then
     echo "> Processing OpenAPI spec"
     api_root="/srv/repository/releases/openapi"
     if [[ -z ${is_unstable} ]]; then
