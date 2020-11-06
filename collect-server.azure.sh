@@ -431,7 +431,7 @@ do_docker_meta() {
     # thus resulting in inconsistencies with these images. By doing these in parallel they
     # grap upstream as soon as possible then can take as long as they need.
     echo -n "Waiting for docker builds..."
-    while pgrep "docker build"; do
+    while [[ $( ps aux | grep '[d]ocker build' | wc -l ) -gt 0 ]]; do
         sleep 15
         echo -n "."
     done
