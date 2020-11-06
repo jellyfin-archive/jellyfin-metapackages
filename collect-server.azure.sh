@@ -592,7 +592,7 @@ if [[ -f ${indir}/openapi.json ]]; then
         link_name="jellyfin-openapi-unstable.json"
     fi
     mkdir -p ${api_dir}
-    mv ${indir}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
+    mv ${indir}/${build_id}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
     rm -f ${api_root}/${link_name}
     ln -s ${api_dir}/jellyfin-openapi-${api_version}.json ${api_root}/${link_name}
 fi
