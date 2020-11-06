@@ -579,6 +579,24 @@ if [[ -z ${skip_docker} ]]; then
     do_docker_meta
 fi
 
+if [[ -f ${indir}/openapi.json ]]; then
+    echo "> Processing OpenAPI spec"
+    api_root="/srv/repository/releases/openapi"
+    if [[ -z ${is_unstable} ]]; then
+        api_dir="${api_root}/stable"
+        api_version="${version}"
+        link_name="latest-stable.json"
+    else
+        api_dir="${api_root}/unstable"
+        api_version="${build_id}"
+        link_name="latest-unstable.json"
+    fi
+    mkdir -p ${api_dir}
+    mv ${indir}/openapi.json ${api_dir}/${api_version}.json
+    rm -f ${api_root}/${link_name}
+    ln -s ${api_dir}/${api_version}.json ${api_root}/${link_name}
+fi
+
 # Cleanup
 rm -r ${indir}/${build_id}
 
