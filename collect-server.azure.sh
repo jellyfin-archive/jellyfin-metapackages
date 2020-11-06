@@ -598,18 +598,21 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
     if [[ -z ${is_unstable} ]]; then
         api_dir="${api_root}/stable"
         api_version="${version}"
-        link_name="jellyfin-openapi-stable.json"
+        link_name="jellyfin-openapi-stable"
     else
         api_dir="${api_root}/unstable"
         api_version="${build_id}"
-        link_name="jellyfin-openapi-unstable.json"
+        link_name="jellyfin-openapi-unstable"
     fi
     mkdir -p ${api_dir}
     if ! diff -q ${indir}/${build_id}/openapi.json ${api_root}/${link_name} &>/dev/null; then
         # Only replace the OpenAPI spec if they differ
         mv ${indir}/${build_id}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
-        rm -f ${api_root}/${link_name}
-        ln -s ${api_dir}/jellyfin-openapi-${api_version}.json ${api_root}/${link_name}
+        if [[ -L ${api_root}/${link_name}.json ]]; then
+            rm -f ${api_root}/${link_name}_previous.json
+            mv ${api_root}/${link_name}.json ${api_root}/${link_name}_previous.json
+        fi
+        ln -s ${api_dir}/jellyfin-openapi-${api_version}.json ${api_root}/${link_name}.json
     fi
 fi
 
