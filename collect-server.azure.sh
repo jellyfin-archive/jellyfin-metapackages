@@ -619,6 +619,9 @@ fi
 # Cleanup
 rm -r ${indir}/${build_id}
 
+# Run mirrorbits refresh
+mirrorbits refresh
+
 echo "Finished at $( date )" 1>&1
 echo "Finished at $( date )" 1>&2
 
