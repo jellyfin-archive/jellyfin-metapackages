@@ -21,6 +21,7 @@ flock -x 300
 # Static variables
 repo_dir="/srv/jellyfin"
 metapackages_dir="${repo_dir}/projects/server/jellyfin-metapackages"
+plugins_dir="${repo_dir}/projects/plugin/"
 docker_arches=(
     "amd64"
     "arm64"
@@ -618,6 +619,14 @@ fi
 
 # Cleanup
 rm -r ${indir}/${build_id}
+
+if [[ -n ${is_unstable} ]]; then
+    # Build unstable plugins
+    for plugin in ${plugins_dir}/jellyfin-plugin-*; do
+        export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
+        /srv/build-plugin.sh ${plugin} unstable
+    done
+fi
 
 # Run mirrorbits refresh
 mirrorbits refresh
