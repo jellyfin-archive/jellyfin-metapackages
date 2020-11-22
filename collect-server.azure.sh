@@ -18,6 +18,8 @@ fi
 # Acquire an exclusive lock so multiple simultaneous builds do not override each other
 flock -x 300
 
+time_start=$( date +%s )
+
 # Static variables
 repo_dir="/srv/jellyfin"
 metapackages_dir="${repo_dir}/projects/server/jellyfin-metapackages"
@@ -633,8 +635,11 @@ fi
 # Run mirrorbits refresh
 mirrorbits refresh
 
-echo "Finished at $( date )" 1>&1
-echo "Finished at $( date )" 1>&2
+time_end=$( date +%s )
+time_total=$( echo "${time_end} - ${time_start}" | bc )
+
+echo "Finished at $( date ) in ${time_total} seconds" 1>&1
+echo "Finished at $( date ) in ${time_total} seconds" 1>&2
 
 ) 300>/var/log/collect-server.lock
 
