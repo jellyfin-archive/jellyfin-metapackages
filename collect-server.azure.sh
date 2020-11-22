@@ -621,11 +621,13 @@ fi
 rm -r ${indir}/${build_id}
 
 if [[ -n ${is_unstable} ]]; then
+    pushd ${repo_dir}
     # Build unstable plugins
+    export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
     for plugin in ${plugins_dir}/jellyfin-plugin-*; do
-        export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
         /srv/jellyfin/build-plugin.sh ${plugin} unstable
     done
+    popd
 fi
 
 # Run mirrorbits refresh
