@@ -624,7 +624,7 @@ if [[ -n ${is_unstable} ]]; then
     # Build unstable plugins
     for plugin in ${plugins_dir}/jellyfin-plugin-*; do
         export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
-        /srv/build-plugin.sh ${plugin} unstable
+        /srv/jellyfin/build-plugin.sh ${plugin} unstable
     done
 fi
 
