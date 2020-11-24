@@ -466,7 +466,7 @@ do_docker_meta() {
         echo "Removing pushed docker image for ${arch}"
         docker image rm "${docker_image}":"${cversion}-${arch}" 1>&2
     done
-    #docker image prune --force 1>&2
+    docker image prune --force 1>&2
 
     find /var/log/build/docker-combined -mtime +7 -exec rm {} \;
 
