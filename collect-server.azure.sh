@@ -480,7 +480,7 @@ cleanup_unstable() {
         return
     fi
     filedir="/srv/repository/releases/server/${platform}/versions/unstable"
-    find ${filedir} -mindepth 2 -maxdepth 2 -type d -mtime +5 -exec rm -r {} \;
+    find ${filedir} -mindepth 2 -maxdepth 2 -type d -mtime +3 -exec rm -r {} \;
 }
 
 # For web, which does not build every platform, make copies so we parse sanely later
