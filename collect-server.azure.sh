@@ -628,6 +628,7 @@ if [[ -n ${is_unstable} ]]; then
     export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
     for plugin in ${plugins_dir}/jellyfin-plugin-*; do
         /srv/jellyfin/build-plugin.sh ${plugin} unstable
+        chown -R build:adm ${plugin}
     done
     popd
 fi
