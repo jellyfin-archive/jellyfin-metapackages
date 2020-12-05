@@ -298,17 +298,21 @@ do_deb_meta() {
     
     filedir="/srv/repository/releases/server/${platform}"
 
-    if [[ -z ${is_unstable} ]]; then
-        releasedir="versions/stable/meta/${version}"
-        linkdir="stable"
-        versend="-1"
-    else
+    if [[ -n ${is_unstable} ]]; then
         releasedir="versions/unstable/meta/${version}"
         linkdir="unstable"
         versend="-unstable"
+    elif [[ -n ${is_rc} ]]; then
+        releasedir="versions/stable/meta/${version}"
+        linkdir="stable"
+        versend=""
+    else
+        releasedir="versions/stable/meta/${version}"
+        linkdir="stable"
+        versend="-1"
     fi
 
-    if [[ -z ${is_unstable} ]]; then
+    if [[ -z ${is_unstable} && -n ${is_rc} ]]; then
         # Check if we're the first one done and abandon this if so (let the last build trigger the metapackage)
         if [[ 
             $( reprepro -b /srv/repository/${platform} -C main list ${codename} jellyfin-web | awk '{ print $NF }' | sort | uniq | grep -F "${version}" | wc -l ) -lt 1
@@ -325,8 +329,10 @@ do_deb_meta() {
     fi
 
     # Check if there's already a metapackage (e.g. this is the second or later arch for this platform)
-    if [[ $( reprepro -b /srv/repository/${platform} -C main list ${codename} jellyfin | awk '{ print $NF }' | sort | uniq | grep -F "${version}" | wc -l ) -gt 0 ]]; then
-        return
+    if [[ -n ${is_rc} ]]; then
+        if [[ $( reprepro -b /srv/repository/${platform} -C main list ${codename} jellyfin | awk '{ print $NF }' | sort | uniq | grep -F "${version}" | wc -l ) -gt 0 ]]; then
+            return
+        fi
     fi
 
     sed -i "s/Version: X.Y.Z/Version: ${version}${versend}/g" jellyfin.debian
