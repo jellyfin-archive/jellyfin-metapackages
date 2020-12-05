@@ -13,9 +13,6 @@ if [[ $( whoami ) != 'root' ]]; then
     echo "Script must be run as root"
 fi
 
-echo $@
-exit 0
-
 (
 
 # Acquire an exclusive lock so multiple simultaneous builds do not override each other
@@ -74,6 +71,13 @@ if [[ -z "${version}" ]]; then
     exit 1
 fi
 
+if [[ -z ${is_unstable} && ${version} =~ "~rc" ]]; then
+    echo "This is an RC"
+    is_rc="rc"
+else
+    is_rc=""
+fi
+
 # Ensure Metapackages repo is cloned and up-to-date
 echo "Ensuring metapackages repo is up to date"
 pushd ${repo_dir} 1>&2
@@ -90,6 +94,10 @@ skip_docker=""
 
 # Debian collection function
 do_deb() {
+    if [[ -n ${is_rc} ]]; then
+        return
+    fi
+
     typename="${1}"
     platform="${typename%.*}"
     case ${platform} in
@@ -155,7 +163,7 @@ do_files() {
     mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*; do
-        if [[ ${file} =~ "*.sha256sum" ]]; then
+        if [[ ${file} =~ ".sha256sum" ]]; then
             continue
         fi
         sha256sum ${file} > ${file}.sha256sum
@@ -337,26 +345,28 @@ do_deb_meta() {
 
     repodir="/srv/repository/${platform}"
 
-    if [[ -z ${is_unstable} ]]; then
-        component="-C main"
-    else
-        component="-C unstable"
-    fi
+    if [[ -z ${is_rc} ]]; then
+        if [[ -z ${is_unstable} ]]; then
+            component="-C main"
+        else
+            component="-C unstable"
+        fi
 
-    # Reprepro repository
-    for release in ${releases[@]}; do
-        echo "Importing files into ${release}"
-        reprepro -b ${repodir} --export=never --keepunreferencedfiles \
-            ${component} \
-            includedeb \
-            ${release} \
-            ./*.deb
-    done
-    echo "Cleaning and exporting repository"
-    reprepro -b ${repodir} deleteunreferenced
-    reprepro -b ${repodir} export
-    chown -R root:adm ${repodir}
-    chmod -R g+w ${repodir}
+        # Reprepro repository
+        for release in ${releases[@]}; do
+            echo "Importing files into ${release}"
+            reprepro -b ${repodir} --export=never --keepunreferencedfiles \
+                ${component} \
+                includedeb \
+                ${release} \
+                ./*.deb
+        done
+        echo "Cleaning and exporting repository"
+        reprepro -b ${repodir} deleteunreferenced
+        reprepro -b ${repodir} export
+        chown -R root:adm ${repodir}
+        chmod -R g+w ${repodir}
+    fi
 
     # Static files
     echo "Creating release directory"
@@ -389,6 +399,26 @@ do_deb_meta() {
 do_docker_meta() {
     pushd ${metapackages_dir} 1>&2
 
+    if [[ -n ${is_rc} ]]; then
+        # We have to fix the tag version name because what we have is wrong
+        oversion="${version}"
+        version="$( sed 's/~rc/-rc/g' <<<"${version}" )"
+    fi
+
+    if [[ -n ${is_unstable} ]]; then
+        group_tag="unstable"
+        release_tag="unstable"
+        cversion="${version}-unstable"
+    elif [[ -n ${is_rc} ]]; then
+        group_tag="stable-rc"
+        release_tag="${version}"
+        cversion="${version}"
+    else
+        group_tag="latest"
+        release_tag="${version}"
+        cversion="${version}"
+    fi
+
     # During a real release, we must check that both builder images are up; if one isn't, we're the first one done (or it failed), so return
     if [[ -z ${is_unstable} ]]; then
         server_ok=""
@@ -402,14 +432,9 @@ do_docker_meta() {
         fi
     fi
 
-    if [[ -z ${is_unstable} ]]; then
-        group_tag="latest"
-        release_tag="${version}"
-        cversion="${version}"
-    else
-        group_tag="unstable"
-        release_tag="unstable"
-        cversion="${version}-unstable"
+    # We're in a stable or rc build, and this image already exists, so abort
+    if curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin/tags/${version} >/dev/null; then
+        return
     fi
 
     # Enable Docker experimental features (manifests)
@@ -474,6 +499,11 @@ do_docker_meta() {
     find /var/log/build/docker-combined -mtime +7 -exec rm {} \;
 
     popd 1>&2
+
+    if [[ -n ${is_rc} ]]; then
+        # Restore the original version variable
+        version="${oversion}"
+    fi
 }
 
 cleanup_unstable() {
@@ -525,14 +555,14 @@ for directory in ${indir}/${build_id}/*; do
     case ${typename} in
         debian*)
             do_deb ${typename}
-            do_files ${typename}
             do_deb_meta ${typename}
+            do_files ${typename}
             cleanup_unstable ${typename}
         ;;
         ubuntu*)
             do_deb ${typename}
-            do_files ${typename}
             do_deb_meta ${typename}
+            do_files ${typename}
             cleanup_unstable ${typename}
         ;;
         fedora*)
@@ -573,13 +603,13 @@ for directory in ${indir}/${build_id}/*; do
         ;;
         windows*)
             # Trigger the installer build; this is done here due to convolutions doing it in the CI itself
-            if [[ -n ${is_unstable} ]]; then
-                echo "Triggering pipeline build for Windows Installer (unstable)"
-                #az pipelines build queue --organization https://dev.azure.com/jellyfin-project --project jellyfin --definition-id 30 --branch master --variables Trigger="Unstable" 1>&2
-            else
-                echo "Triggering pipeline build for Windows Installer (stable v${version})"
-                #az pipelines build queue --organization https://dev.azure.com/jellyfin-project --project jellyfin --definition-id 30 --branch master --variables Trigger="Stable" TagName="v${version}" 1>&2
-            fi
+            #if [[ -n ${is_unstable} ]]; then
+            #    echo "Triggering pipeline build for Windows Installer (unstable)"
+            #    #az pipelines build queue --organization https://dev.azure.com/jellyfin-project --project jellyfin --definition-id 30 --branch master --variables Trigger="Unstable" 1>&2
+            #else
+            #    echo "Triggering pipeline build for Windows Installer (stable v${version})"
+            #    #az pipelines build queue --organization https://dev.azure.com/jellyfin-project --project jellyfin --definition-id 30 --branch master --variables Trigger="Stable" TagName="v${version}" 1>&2
+            #fi
 
             do_files ${typename}
             do_combine_portable ${typename}
