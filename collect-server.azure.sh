@@ -13,6 +13,9 @@ if [[ $( whoami ) != 'root' ]]; then
     echo "Script must be run as root"
 fi
 
+echo $@
+exit 0
+
 (
 
 # Acquire an exclusive lock so multiple simultaneous builds do not override each other
