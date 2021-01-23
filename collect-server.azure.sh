@@ -143,15 +143,15 @@ do_files() {
     fi
     filedir="/srv/repository/releases/server/${platform}"
 
-    if [[ -z ${is_unstable} ]]; then
-        releasedir="versions/stable/${servertype}/${version}"
-        linkdir="stable"
-    elif [[ -z ${is_rc} ]]; then
+    if [[ -n ${is_unstable} ]]; then
+        releasedir="versions/unstable/${servertype}/${version}"
+        linkdir="unstable"
+    elif [[ -n ${is_rc} ]]; then
         releasedir="versions/stable-rc/${servertype}/${version}"
         linkdir="stable-rc"
     else
-        releasedir="versions/unstable/${servertype}/${version}"
-        linkdir="unstable"
+        releasedir="versions/stable/${servertype}/${version}"
+        linkdir="stable"
     fi
 
     # Static files
