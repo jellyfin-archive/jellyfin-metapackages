@@ -197,12 +197,15 @@ do_combine_portable() {
         filetype="tar.gz"
     fi
 
-    if [[ -z ${is_unstable} ]]; then
-        stability="stable"
-        pkgend=""
-    else
+    if [[ -n ${is_unstable} ]]; then
         stability="unstable"
         pkgend="-unstable"
+    elif [[ -n ${is_rc} ]]; then
+        stability="stable-rc"
+        pkgend=""
+    else
+        stability="stable"
+        pkgend=""
     fi
     releasedir="versions/${stability}/${servertype}"
     partnerreleasedir="versions/${stability}/${partnertype}"
@@ -306,8 +309,8 @@ do_deb_meta() {
         linkdir="unstable"
         versend="-unstable"
     elif [[ -n ${is_rc} ]]; then
-        releasedir="versions/stable/meta/${version}"
-        linkdir="stable"
+        releasedir="versions/stable-rc/meta/${version}"
+        linkdir="stable-rc"
         versend=""
     else
         releasedir="versions/stable/meta/${version}"
