@@ -146,6 +146,9 @@ do_files() {
     if [[ -z ${is_unstable} ]]; then
         releasedir="versions/stable/${servertype}/${version}"
         linkdir="stable"
+    elif [[ -z ${is_rc} ]]; then
+        releasedir="versions/stable-rc/${servertype}/${version}"
+        linkdir="stable-rc"
     else
         releasedir="versions/unstable/${servertype}/${version}"
         linkdir="unstable"
