@@ -38,6 +38,7 @@ releases_ubuntu=(
     "xenial"
     "bionic"
     "focal"
+    "groovy"
 )
 
 echo "**********" 1>&2
