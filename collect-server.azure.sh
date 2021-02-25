@@ -483,8 +483,11 @@ do_docker_meta() {
 
     # Push the images
     for arch in ${docker_arches[@]}; do
-        echo "Pushing Docker image for ${arch}"
+        echo "Pushing Docker image to DockerHub for ${arch}"
         docker push "${docker_image}":"${cversion}-${arch}" 1>&2
+        echo "Pushing Docker image to ghcr.io for ${arch}"
+        docker tag "${docker_image}":"${cversion}-${arch}" ghcr.io/"${docker_image}":"${cversion}-${arch}" 1>&2
+        docker push ghcr.io/"${docker_image}":"${cversion}-${arch}" 1>&2
     done
 
     # Create the manifests
@@ -496,16 +499,22 @@ do_docker_meta() {
 
     docker manifest create --amend "${docker_image}":"${cversion}" ${image_list_cversion} 1>&2
     docker manifest create --amend "${docker_image}":"${group_tag}" ${image_list_grouptag} 1>&2
+    docker manifest create --amend ghcr.io/"${docker_image}":"${cversion}" ${image_list_cversion} 1>&2
+    docker manifest create --amend ghcr.io/"${docker_image}":"${group_tag}" ${image_list_grouptag} 1>&2
 
     # Push the manifests
-    echo "Pushing Docker image manifests"
+    echo "Pushing Docker image manifests to DockerHub"
     docker manifest push --purge "${docker_image}":"${cversion}" 1>&2
     docker manifest push --purge "${docker_image}":"${group_tag}" 1>&2
+    echo "Pushing Docker image manifests to ghcr.io"
+    docker manifest push --purge ghcr.io/"${docker_image}":"${cversion}" 1>&2
+    docker manifest push --purge ghcr.io/"${docker_image}":"${group_tag}" 1>&2
 
     # Remove images
     for arch in ${docker_arches[@]}; do
         echo "Removing pushed docker image for ${arch}"
         docker image rm "${docker_image}":"${cversion}-${arch}" 1>&2
+        docker image rm ghcr.io/"${docker_image}":"${cversion}-${arch}" 1>&2
     done
     docker image prune --force 1>&2
 

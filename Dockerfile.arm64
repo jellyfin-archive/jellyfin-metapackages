@@ -5,6 +5,10 @@ FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-arm64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM arm64v8/debian:buster-slim
+
+LABEL maintainer="Jellyfin Packaging Team - packaging@jellyfin.org"
+LABEL org.opencontainers.image.source="https://github.com/jellyfin/jellyfin"
+
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
 # Default environment variables for the Jellyfin invocation

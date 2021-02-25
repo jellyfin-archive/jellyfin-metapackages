@@ -5,6 +5,9 @@ FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM debian:buster-slim
 
+LABEL maintainer="Jellyfin Packaging Team - packaging@jellyfin.org"
+LABEL org.opencontainers.image.source="https://github.com/jellyfin/jellyfin"
+
 # Default environment variables for the Jellyfin invocation
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     LC_ALL="en_US.UTF-8" \
