@@ -690,4 +690,5 @@ echo "Finished at $( date ) in ${time_total} seconds" 1>&2
 
 ) 300>/var/log/collect-server.lock
 
+rm /var/log/collect-server.lock
 exit 0
