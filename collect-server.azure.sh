@@ -170,7 +170,7 @@ do_files() {
         if [[ ${file} =~ ".sha256sum" ]]; then
             continue
         fi
-        sha256sum ${file} > ${file}.sha256sum
+        sha256sum ${file} | sed 's, .*/, ,' > ${file}.sha256sum
     done
     echo "Cleaning repository"
     chown -R root:adm ${filedir}
@@ -268,13 +268,13 @@ do_combine_portable() {
         chown -R root:root ./
         zip -r ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.zip ./* &>/dev/null
         echo "Creating sha256sums"
-        sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.zip > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.zip.sha256sum
+        sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.zip | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.zip.sha256sum
     else
         echo "Creating combined tar archive"
         chown -R root:root ./
         tar -czf ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz ./
         echo "Creating sha256sums"
-        sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz.sha256sum
+        sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz.sha256sum
     fi
     popd 1>&2
 
@@ -396,7 +396,7 @@ do_deb_meta() {
         if [[ ${file} =~ "*.sha256sum" ]]; then
             continue
         fi
-        sha256sum ${file} > ${file}.sha256sum
+        sha256sum ${file} | sed 's, .*/, ,' > ${file}.sha256sum
     done
     echo "Cleaning repository"
     chown -R root:adm ${filedir}
