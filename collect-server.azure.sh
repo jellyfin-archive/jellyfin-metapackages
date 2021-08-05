@@ -342,7 +342,7 @@ do_deb_meta() {
         fi
     fi
 
-    sed -i "s/Version: X.Y.Z/Version: ${version}${versend}/g" jellyfin.debian
+    sed -i "s/X.Y.Z/${version}${versend}/g" jellyfin.debian
 
     echo "Building metapackage"
     equivs-build jellyfin.debian 1>&2
