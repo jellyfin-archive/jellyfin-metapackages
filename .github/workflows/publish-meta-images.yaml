@@ -1,0 +1,249 @@
+name: '🚀 Publish Meta Container Images'
+
+on:
+  repository_dispatch:
+    types:
+      - trigger-meta-container
+  workflow_dispatch:
+    inputs:
+      SERVER_TAG:
+        required: true
+        description: The Jeff server image tag to bundle and the resulting meta image tag.
+      WEB_TAG:
+        required: true
+        description: The Jeff web image tag to bundle.
+      IS_STABLE:
+        required: true
+        description: Is the trigged build a stable release (true, false)
+        default: 'false'
+
+concurrency: meta-container
+
+jobs:
+  setup-vars:
+    name: Setup Variables
+    runs-on: ubuntu-latest
+    if: ${{ github.repository == 'jellyfin/jellyfin-metapackages' }}
+
+    outputs:
+      stage: ${{ steps.variables.outputs.stage }}
+      server-version: ${{ steps.variables.outputs.server-version }}
+      web-version: ${{ steps.variables.outputs.web-version }}
+      full-tag: ${{ steps.variables.outputs.full-tag }}
+      short-tag: ${{ steps.variables.outputs.short-tag }}
+
+    steps:
+      - name: Setup Stable Environment
+        if: ${{ github.event_name == 'repository_dispatch' && ! github.event.client_payload.unstable }}
+        run: |-
+          VERSION="${{ github.event.client_payload.version }}"
+          echo "STAGE=stable" >> $GITHUB_ENV
+          echo "FULL_TAG=$(echo ${VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+          echo "SHORT_TAG=$(echo ${VERSION} | grep -Eo '[0-9]+\.[0-9]+')" >> $GITHUB_ENV
+
+          echo "SERVER_VERSION=$(echo ${VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+          echo "WEB_VERSION=$(echo ${VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+
+      - name: Setup Unstable Environment
+        if: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.unstable }}
+        run: |-
+          TYPE="${{ github.event.client_payload.type }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          echo "STAGE=unstable" >> $GITHUB_ENV
+          echo "FULL_TAG=$(date -u '+%Y%m%d.%H%M')" >> $GITHUB_ENV
+          echo "SHORT_TAG=$(date -u '+%Y%m%d')" >> $GITHUB_ENV
+
+          if [[ "${TYPE,,}" =~ 'web' ]]; then
+            WEB_VERSION="${VERSION}"
+            SERVER_VERSION="${VERSION%.*}"
+          else
+            WEB_VERSION="${VERSION%.*}"
+            SERVER_VERSION="${VERSION}"
+          fi
+
+          echo "SERVER_VERSION=$(echo ${SERVER_VERSION} | grep -Eo '[0-9]+\.[0-9]+(\.[0-9])?')" >> $GITHUB_ENV
+          echo "WEB_VERSION=$(echo ${WEB_VERSION} | grep -Eo '[0-9]+\.[0-9]+(\.[0-9])?')" >> $GITHUB_ENV
+
+      - name: Setup Manual Environment
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |-
+          SERVER_VERSION="${{ github.event.inputs.SERVER_TAG }}"
+          WEB_VERSION="${{ github.event.inputs.WEB_TAG }}"
+          IS_STABLE="${{ github.event.inputs.IS_STABLE }}"
+
+          if [[ "${IS_STABLE,,}" =~ 'true' ]]; then
+            echo "STAGE=stable" >> $GITHUB_ENV
+            echo "FULL_TAG=$(echo ${SERVER_VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+            echo "SHORT_TAG=$(echo ${SERVER_VERSION} | grep -Eo '[0-9]+\.[0-9]+')" >> $GITHUB_ENV
+          else
+            echo "STAGE=unstable" >> $GITHUB_ENV
+            echo "FULL_TAG=$(date -u '+%Y%m%d.%H%M')" >> $GITHUB_ENV
+            echo "SHORT_TAG=$(date -u '+%Y%m%d')" >> $GITHUB_ENV
+          fi
+
+          echo "SERVER_VERSION=$(echo ${SERVER_VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+          echo "WEB_VERSION=$(echo ${WEB_VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
+
+
+      - name: Setup sariables
+        id: variables
+        run: |-
+          echo "::set-output name=stage::${STAGE}"
+          echo "::set-output name=server-version::${SERVER_VERSION}"
+          echo "::set-output name=web-version::${WEB_VERSION}"
+          echo "::set-output name=full-tag::${FULL_TAG}"
+          echo "::set-output name=short-tag::${SHORT_TAG}"
+
+  container-images:
+    name: Build Meta Container Images
+    runs-on: ubuntu-latest
+    needs:
+      - setup-vars
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image-tag: amd64
+            image-config: amd64
+          - image-tag: arm64
+            image-config: arm64
+          - image-tag: armhf
+            image-config: arm32
+
+    env:
+      STAGE: ${{ needs.setup-vars.outputs.stage }}
+      SERVER_VERSION: ${{ needs.setup-vars.outputs.server-version }}
+      WEB_VERSION: ${{ needs.setup-vars.outputs.web-version }}
+      FULL_TAG: ${{ needs.setup-vars.outputs.full-tag }}
+      SHORT_TAG: ${{ needs.setup-vars.outputs.short-tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install qemu dependency
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      - name: Build meta image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: jellyfin
+          tags: >-
+            ${{ env.STAGE }}-${{ matrix.image-tag }}
+            ${{ env.STAGE }}-${{ env.SHORT_TAG }}-${{ matrix.image-tag }}
+            ${{ env.STAGE }}-${{ env.FULL_TAG }}-${{ matrix.image-tag }}
+          oci: true
+          arch: ${{ matrix.image-config }}
+          dockerfiles: Dockerfile.${{ matrix.image-tag }}
+          context: .
+          build-args: |-
+            STAGE=${{ env.STAGE }}
+            SERVER_VERSION=${{ env.SERVER_VERSION }}
+            WEB_VERSION=${{ env.WEB_VERSION }}
+
+      - name: Publish meta image to ghcr.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: ghcr.io/jellyfin
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Publish meta image to quay.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: quay.io/jellyfin
+          username: jellyfin+github_actions
+          password: ${{ secrets.RH_TOKEN }}
+
+      - name: Publish meta image to docker.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: docker.io/jellyfin
+          username: jellyfin
+          password: ${{ secrets.DH_TOKEN }}
+
+  create-manifests:
+    name: Create Container collection manifests
+    runs-on: ubuntu-latest
+    needs:
+      - setup-vars
+      - container-images
+
+    env:
+      STAGE: ${{ needs.setup-vars.outputs.stage }}
+      FULL_TAG: ${{ needs.setup-vars.outputs.full-tag }}
+      SHORT_TAG: ${{ needs.setup-vars.outputs.short-tag }}
+
+    steps:
+      - name: Create manifests
+        run: |-
+          podman manifest create jellyfin:${{ env.STAGE }}
+          if [[ "${{ env.STAGE }}" == 'unstable' ]]; then
+            podman manifest create jellyfin:${{ env.STAGE }}-${{ env.FULL_TAG }}
+            podman manifest create jellyfin:${{ env.STAGE }}-${{ env.SHORT_TAG }}
+          else
+            podman manifest create jellyfin:latest
+            podman manifest create jellyfin:${{ env.FULL_TAG }}
+            podman manifest create jellyfin:${{ env.SHORT_TAG }}
+          fi
+
+      - name: Add images to manifests
+        run: |-
+          for arch in amd64 arm64 armhf; do
+            # will fetch the manifest hash and add it to the manifest (the manifest is identical on all registry)
+            podman manifest add jellyfin:${{ env.STAGE }} docker://ghcr.io/jellyfin/jellyfin:${{ env.STAGE }}-${arch}
+          done
+          if [[ "${{ env.STAGE }}" == 'unstable' ]]; then
+            podman manifest add --all jellyfin:${{ env.STAGE }}-${{ env.FULL_TAG }} jellyfin:${{ env.STAGE }}
+            podman manifest add --all jellyfin:${{ env.STAGE }}-${{ env.SHORT_TAG }} jellyfin:${{ env.STAGE }}
+          else
+            podman manifest add --all jellyfin:latest jellyfin:${{ env.STAGE }}
+            podman manifest add --all jellyfin:${{ env.FULL_TAG }} jellyfin:${{ env.STAGE }}
+            podman manifest add --all jellyfin:${{ env.SHORT_TAG }} jellyfin:${{ env.STAGE }}
+          fi
+
+      - name: Log in to GHCR.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ghcr.io/jellyfin
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Log in to Quay.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: jellyfin+github_actions
+          password: ${{ secrets.RH_TOKEN }}
+
+      - name: Log in to GHCR.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: docker.io
+          username: jellyfin
+          password: ${{ secrets.DH_TOKEN }}
+
+      # I dont like the looks of this but there is currently no better solution
+      - name: Push manifests
+        run: |-
+          for registry in "ghcr.io" "quay.io" "docker.io"; do
+            podman manifest push jellyfin:${{ env.STAGE }} docker://${registry}/jellyfin/jellyfin:${{ env.STAGE }}
+            if [[ "${{ env.STAGE }}" == 'unstable' ]]; then
+              podman manifest push jellyfin:${{ env.STAGE }}-${{ env.FULL_TAG }} docker://${registry}/jellyfin/jellyfin:${{ env.STAGE }}-${{ env.FULL_TAG }}
+              podman manifest push jellyfin:${{ env.STAGE }}-${{ env.SHORT_TAG }} docker://${registry}/jellyfin/jellyfin:${{ env.STAGE }}-${{ env.SHORT_TAG }}
+            else
+              podman manifest push jellyfin:latest docker://${registry}/jellyfin/jellyfin:latest
+              podman manifest push jellyfin:${{ env.FULL_TAG }} docker://${registry}/jellyfin/jellyfin:${{ env.FULL_TAG }}
+              podman manifest push jellyfin:${{ env.SHORT_TAG }} docker://${registry}/jellyfin/jellyfin:${{ env.SHORT_TAG }}
+            fi
+          done
