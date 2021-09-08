@@ -74,8 +74,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2.3.4
 
-      - name: Set correct permissions
-        run: chmod +x delete_workflows.sh
+      # The 'echo' command masks the environment variable
+      - name: Prepare environment
+        run: chmod +x delete_workflows.sh && echo "::add-mask::${GITHUB_TOKEN}"
         working-directory: ./maintenance
 
       - name: Run deletion script 🗑
@@ -102,8 +103,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v2.3.4
 
-      - name: Set correct permissions
-        run: chmod +x delete_ghcr_dangling_images.sh
+      # The 'echo' command masks the environment variable
+      - name: Prepare environment
+        run: chmod +x delete_ghcr_dangling_images.sh && echo "::add-mask::${GITHUB_TOKEN}"
         working-directory: ./maintenance
 
       - name: Run deletion script 🗑
