@@ -40,7 +40,7 @@ unset sorted, file_tag_count, tag_count
 ## This token is that GitHub provides is used to access the registry in read-only, so users are able to
 ## use GHCR without signing up to GitHub. By using this token for checking for the published images, we don't consume
 ## our own API quota.
-dest_token=$(wget -q https://ghcr.io/token\?scope\="repository:${original_image}:pull" -O - | jq -r '.token')
+dest_token=$(wget -q https://${target_repo}/token\?scope\="repository:${original_image}:pull" -O - | jq -r '.token')
 tag_names=$(cat "$tag_file" | jq -r '.[] | .name')
 
 while read -r line; do
