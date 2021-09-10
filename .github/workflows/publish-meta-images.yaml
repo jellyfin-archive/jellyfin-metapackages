@@ -85,7 +85,7 @@ jobs:
           echo "WEB_VERSION=$(echo ${WEB_VERSION} | grep -Eo '[0-9]+\.[0-9]+\.[0-9]')" >> $GITHUB_ENV
 
 
-      - name: Setup sariables
+      - name: Setup variables
         id: variables
         run: |-
           echo "::set-output name=stage::${STAGE}"
