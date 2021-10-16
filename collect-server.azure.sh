@@ -268,6 +268,8 @@ do_combine_portable_linux() {
         echo "Creating sha256sums"
         sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz.sha256sum
         popd 1>&2
+
+        rm -rf ${tempdir}
     done
 
 }
