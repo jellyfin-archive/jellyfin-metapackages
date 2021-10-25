@@ -5,6 +5,8 @@ FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
 FROM debian:stable-slim
 
+ENV HEALTHCHECK_URL=http://localhost:8096/health
+
 # Default environment variables for the Jellyfin invocation
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     LC_ALL="en_US.UTF-8" \
@@ -29,8 +31,9 @@ ARG LEVEL_ZERO_VERSION=1.2.21182
 
 # Install dependencies:
 # mesa-va-drivers: needed for AMD VAAPI. Mesa >= 20.1 is required for HEVC transcoding.
+# curl: healthcheck
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg wget apt-transport-https \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https \
  && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
  && echo 'deb [arch=amd64] https://repo.jellyfin.org/debian buster main' > /etc/apt/sources.list.d/jellyfin.list \
  && cat /etc/apt/sources.list.d/jellyfin.list \
@@ -64,3 +67,6 @@ COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 EXPOSE 8096
 VOLUME ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
 ENTRYPOINT [ "/jellyfin/jellyfin" ]
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+     CMD curl -Lk "${HEALTHCHECK_URL}" || exit 1
