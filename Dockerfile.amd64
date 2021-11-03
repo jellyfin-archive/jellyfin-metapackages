@@ -3,7 +3,7 @@ ARG TARGET_RELEASE=stable
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM debian:stable-slim
+FROM debian:bullseye-slim
 
 # Default environment variables for the Jellyfin invocation
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
@@ -32,7 +32,7 @@ ARG LEVEL_ZERO_VERSION=1.2.21182
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg wget apt-transport-https \
  && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
- && echo 'deb [arch=amd64] https://repo.jellyfin.org/debian buster main' > /etc/apt/sources.list.d/jellyfin.list \
+ && echo 'deb [arch=amd64] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
  && cat /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
