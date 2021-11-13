@@ -13,6 +13,28 @@ if [[ $( whoami ) != 'root' ]]; then
     echo "Script must be run as root"
 fi
 
+# Get our input arguments
+echo ${0} ${@} 1>&2
+indir="${1}"
+build_id="${2}"
+if [[ "${3}" =~ [Uu]nstable ]]; then
+    is_unstable='unstable'
+    tag="none"
+else
+    is_unstable=''
+    tag="${3}"
+fi
+
+# Abort if we're missing arguments
+if [[ -z ${indir} || -z ${build_id} ]]; then
+    exit 1
+fi
+
+if grep -- '-alpha\|-beta\|-rc' <<<"${tag}"; then
+    echo "THIS IS A PRERELEASE; RUN prerelease.sh MANUALLY passing in these arguments: $@"
+    exit 0
+fi
+
 (
 
 # Acquire an exclusive lock so multiple simultaneous builds do not override each other
@@ -52,28 +74,6 @@ date 1>&2
 echo "**********" 1>&2
 
 set -o xtrace
-
-# Get our input arguments
-echo ${0} ${@} 1>&2
-indir="${1}"
-build_id="${2}"
-if [[ "${3}" =~ [Uu]nstable ]]; then
-    is_unstable='unstable'
-    tag="none"
-else
-    is_unstable=''
-    tag="${3}"
-fi
-
-# Abort if we're missing arguments
-if [[ -z ${indir} || -z ${build_id} ]]; then
-    exit 1
-fi
-
-if grep -- '-alpha\|-beta\|-rc' <<<"${tag}"; then
-    echo "THIS IS A PRERELEASE; RUN prerelease.sh MANUALLY passing in these arguments: $@"
-    exit 0
-fi
 
 # These rely on the naming format jellyin-{type}[-_]{ver}[-_]junk
 examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
