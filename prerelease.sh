@@ -123,29 +123,23 @@ do_combine_portable_linux() {
 
     releasedir="versions/${stability}/${servertype}"
     partnerreleasedir="versions/${stability}/${partnertype}"
-    linkdir="${stability}/combined"
+    linkdir="${stability}/${version}/combined"
+
+    mkdir -p ${filedir}/versions/${stability}/combined/${version}
 
     # We must work through all 4 types in linux_static_arches[@]
     for arch in ${linux_static_arches[@]}; do
         case ${servertype} in
             server)
-                server_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${servertype}*${arch}.${filetype}" | head -1 )"
-                if [[ -z ${is_unstable} ]]; then
-                    web_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*${version}*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-                else
-                    web_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-                fi
+                server_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-server*-${arch}.${filetype}" | head -1 )"
+                web_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "jellyfin-web*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
                 if [[ ! -f ${web_archive} ]]; then
                     continue
                 fi
             ;;
             web)
-                server_archive="$( find ${filedir}/${partnerreleasedir}/${version} -type f -name "jellyfin-${servertype}*.${filetype}" | head -1 )"
-                if [[ -z ${is_unstable} ]]; then
-                    web_archive="$( find ${filedir}/${releasedir} -type f -name "*${version}*${arch}.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-                else
-                    web_archive="$( find ${filedir}/${releasedir} -type f -name "*${arch}.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-                fi
+                server_archive="$( find ${filedir}/${partnerreleasedir}/${version} -type f -name "jellyfin-server*-${arch}.${filetype}" | head -1 )"
+                web_archive="$( find ${filedir}/${releasedir} -type f -name "jellyfin-web*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
                 if [[ ! -f ${server_archive} ]]; then
                     continue
                 fi
@@ -183,6 +177,11 @@ do_combine_portable_linux() {
         rm -rf ${tempdir}
     done
 
+    echo "Creating links"
+    if [[ -e ${filedir}/${linkdir} ]]; then
+        rm -rf ${filedir}/${linkdir}
+    fi
+    ln -s ../../versions/${stability}/combined/${version} ${filedir}/${linkdir}
 }
 
 # Portable archive combination function
@@ -214,11 +213,7 @@ do_combine_portable() {
     linkdir="${stability}/${version}/combined"
 
     our_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${servertype}*.${filetype}" | head -1 )"
-    if [[ -z ${is_unstable} ]]; then
-        partner_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*${version}*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-    else
-        partner_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
-    fi
+    partner_archive="$( find ${filedir}/${partnerreleasedir}/${version} -type f -name "jellyfin-*.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
 
     if [[ ! -f ${partner_archive} ]]; then
         return
@@ -280,11 +275,10 @@ do_combine_portable() {
     popd 1>&2
     
     echo "Creating links"
-    mkdir -p ${filedir}/${linkdir}/${version}
-    if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
-        rm -f ${filedir}/${linkdir}/${version}/${servertype}
+    if [[ -e ${filedir}/${linkdir} ]]; then
+        rm -rf ${filedir}/${linkdir}
     fi
-    ln -s ../../versions/${stability}/combined/${version} ${filedir}/${linkdir}/${version}/${servertype}
+    ln -s ../../versions/${stability}/combined/${version} ${filedir}/${linkdir}
 
     echo "Cleaning up"
     rm -rf ${tempdir}
@@ -492,30 +486,24 @@ for directory in ${indir}/${build_id}/*; do
         debian*)
             do_files ${typename}
             do_deb_meta ${typename}
-            cleanup_unstable ${typename}
         ;;
         ubuntu*)
             do_files ${typename}
             do_deb_meta ${typename}
-            cleanup_unstable ${typename}
         ;;
         fedora*)
             do_files ${typename}
-            cleanup_unstable ${typename}
         ;;
         centos*)
             do_files ${typename}
-            cleanup_unstable ${typename}
         ;;
         portable)
             do_files ${typename}
             do_combine_portable ${typename}
-            cleanup_unstable ${typename}
         ;;
         linux*)
             do_files ${typename}
             do_combine_portable_linux
-            cleanup_unstable ${typename}
         ;;
         windows-installer*)
             # Modify the version info of the package if unstable
@@ -530,7 +518,6 @@ for directory in ${indir}/${build_id}/*; do
             fi
 
             do_files ${typename}
-            cleanup_unstable windows # Manual set to avoid override
 
             # Skip Docker, since this is not a real build
             skip_docker="true"
@@ -538,12 +525,10 @@ for directory in ${indir}/${build_id}/*; do
         windows*)
             do_files ${typename}
             do_combine_portable ${typename}
-            cleanup_unstable ${typename}
         ;;
         macos*)
             do_files ${typename}
             do_combine_portable ${typename}
-            cleanup_unstable ${typename}
         ;;
     esac
 done
