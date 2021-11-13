@@ -78,11 +78,11 @@ do_files() {
     # Static files
     echo "Creating release directory"
     mkdir -p ${filedir}/${releasedir}
-    mkdir -p ${filedir}/${linkdir}
-    if [[ -L ${filedir}/${linkdir}/${servertype} ]]; then
-        rm -f ${filedir}/${linkdir}/${servertype}
+    mkdir -p ${filedir}/${linkdir}/${version}
+    if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
+        rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../${releasedir} ${filedir}/${linkdir}/${servertype}
+    ln -s ../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
     echo "Copying files"
     mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
@@ -207,7 +207,7 @@ do_combine_portable() {
 
     releasedir="versions/${stability}/${servertype}"
     partnerreleasedir="versions/${stability}/${partnertype}"
-    linkdir="${stability}/combined"
+    linkdir="${stability}/${version}/combined"
 
     our_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${servertype}*.${filetype}" | head -1 )"
     if [[ -z ${is_unstable} ]]; then
@@ -276,10 +276,11 @@ do_combine_portable() {
     popd 1>&2
     
     echo "Creating links"
-    if [[ -L ${filedir}/${linkdir} ]]; then
-        rm -f ${filedir}/${linkdir}
+    mkdir -p ${filedir}/${linkdir}/${version}
+    if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
+        rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}
+    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}/${version}/${servertype}
 
     echo "Cleaning up"
     rm -rf ${tempdir}
@@ -325,11 +326,12 @@ do_deb_meta() {
     # Static files
     echo "Creating release directory"
     mkdir -p ${filedir}/${releasedir}
-    mkdir -p ${filedir}/${linkdir}
-    if [[ -L ${filedir}/${linkdir}/meta ]]; then
-        rm -f ${filedir}/${linkdir}/meta
+    mkdir -p ${filedir}/${linkdir}/${version}
+    if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
+        rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../${releasedir} ${filedir}/${linkdir}/meta
+    ln -s ../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
+
     echo "Copying files"
     mv ./*.deb ${filedir}/${releasedir}/
     echo "Creating sha256sums"
@@ -551,6 +553,24 @@ fi
 
 # Cleanup
 rm -r ${indir}/${build_id}
+
+# Update all the various entries in the PHP headers
+for platform in $( find "/srv/repository/releases/server" -mindepth 1 -maxdepth 1 -type d ); do
+    pushd ${platform}
+    pre_index_file="stable-pre/index.php"
+    current_array="$( grep '$directories = array' $file | awk -F '[()]' '{ print $2 }' )"
+    types=$( find "stable-pre/${version}" -mindepth 1 -maxdepth 1 -type l -exec basename {} \; )
+
+    new_array_paths=()
+    for rtype in $(types); do
+        new_array_paths+=("'${version}/${rtype}'")
+    done
+    new_array="$( IFS=, ; echo "${new_array_paths[*]}" )"
+
+    sed -i "s|${current_array}|${new_array}, ${current_array}|g" ${pre_index_file}
+
+    popd
+done
 
 # Run mirrorbits refresh
 mirrorbits refresh
