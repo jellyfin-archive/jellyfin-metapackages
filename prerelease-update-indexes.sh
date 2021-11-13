@@ -2,6 +2,8 @@
 
 version="${1}"
 
+set -o xtrace
+
 # Update all the various entries in the PHP headers
 for platform in $( find "/srv/repository/releases/server" -mindepth 1 -maxdepth 1 -type d ); do
     pushd ${platform}
