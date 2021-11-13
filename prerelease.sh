@@ -386,28 +386,18 @@ do_docker_meta() {
     # Prepare log dir
     mkdir -p /var/log/build/docker-combined
 
-    while true; do
-        for arch in ${docker_arches[@]}; do
-            echo "Building Docker image for ${arch}"
-            # Build the image
-            docker build --no-cache --pull -f Dockerfile.${arch} -t "${docker_image}":"${version}-${arch}" --build-arg TARGET_RELEASE=${version} . &>/var/log/build/docker-combined/${version}.${arch}.log &
-        done
-
-        # All images build in parallel in the background; wait for them to finish
-        # This minimizes the amount of time that an alternative Docker image could be uploaded,
-        # thus resulting in inconsistencies with these images. By doing these in parallel they
-        # grap upstream as soon as possible then can take as long as they need.
-        echo -n "Waiting for docker builds..."
-        wait
-
-        if [[ $( docker image ls | grep ${version} | wc -l ) -eq 3 ]]; then
-            echo " done."
-            break
-        else
-            echo " failed; retrying."
-            continue
-        fi
+    for arch in ${docker_arches[@]}; do
+        echo "Building Docker image for ${arch}"
+        # Build the image
+        docker build --no-cache --pull -f Dockerfile.${arch} -t "${docker_image}":"${version}-${arch}" --build-arg TARGET_RELEASE=${version} . &>/var/log/build/docker-combined/${version}.${arch}.log &
     done
+
+    # All images build in parallel in the background; wait for them to finish
+    # This minimizes the amount of time that an alternative Docker image could be uploaded,
+    # thus resulting in inconsistencies with these images. By doing these in parallel they
+    # grap upstream as soon as possible then can take as long as they need.
+    echo -n "Waiting for docker builds..."
+    wait
 
     # Push the images
     for arch in ${docker_arches[@]}; do
