@@ -64,6 +64,7 @@ set -o xtrace
 
 examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
 servertype="$( awk -F '[_-]' '{ print $2 }' <<<"${examplefile}" )"
+echo "Servertype: ${servertype}"
 
 # Static files collection function
 do_files() {
@@ -293,7 +294,6 @@ do_combine_portable() {
 do_deb_meta() {
     typename="${1}"
     platform="${typename%.*}"
-    servertype="meta"
     pushd ${metapackages_dir} 1>&2
 
     case ${platform} in
@@ -331,10 +331,10 @@ do_deb_meta() {
     echo "Creating release directory"
     mkdir -p ${filedir}/${releasedir}
     mkdir -p ${filedir}/${linkdir}/${version}
-    if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
-        rm -f ${filedir}/${linkdir}/${version}/${servertype}
+    if [[ -L ${filedir}/${linkdir}/${version}/meta ]]; then
+        rm -f ${filedir}/${linkdir}/${version}/meta
     fi
-    ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
+    ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/meta
 
     echo "Copying files"
     mv ./*.deb ${filedir}/${releasedir}/
@@ -490,13 +490,13 @@ for directory in ${indir}/${build_id}/*; do
     echo "> Processing $typename"
     case ${typename} in
         debian*)
-            do_deb_meta ${typename}
             do_files ${typename}
+            do_deb_meta ${typename}
             cleanup_unstable ${typename}
         ;;
         ubuntu*)
-            do_deb_meta ${typename}
             do_files ${typename}
+            do_deb_meta ${typename}
             cleanup_unstable ${typename}
         ;;
         fedora*)
