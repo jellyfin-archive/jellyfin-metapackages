@@ -3,8 +3,8 @@
 # Jellyfin Azure builds collection script
 # Parses the artifacts uploaded from an Azure build and puts them into place, as well as building the various metapackages, metaarchives, and Docker metaimages.
 
-logfile="/var/log/build/collect-server.log"
-exec 2>>${logfile}
+#logfile="/var/log/build/collect-server.log"
+#exec 2>>${logfile}
 
 # Ensure we're running as root (i.e. sudo $0)
 if [[ $( whoami ) != 'root' ]]; then
