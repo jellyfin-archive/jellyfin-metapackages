@@ -11,6 +11,17 @@ if [[ $( whoami ) != 'root' ]]; then
     echo "Script must be run as root"
 fi
 
+# Get our input arguments
+echo ${0} ${@} 1>&2
+indir="${1}"
+build_id="${2}"
+version="${3}"
+
+# Abort if we're missing arguments
+if [[ -z ${indir} || -z ${build_id} || -z ${version} ]]; then
+    exit 1
+fi
+
 (
 
 # Acquire an exclusive lock so multiple simultaneous builds do not override each other
@@ -51,16 +62,8 @@ echo "**********" 1>&2
 
 set -o xtrace
 
-# Get our input arguments
-echo ${0} ${@} 1>&2
-indir="${1}"
-build_id="${2}"
-version="${3}"
-
-# Abort if we're missing arguments
-if [[ -z ${indir} || -z ${build_id} || -z ${version} ]]; then
-    exit 1
-fi
+examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
+servertype="$( awk -F '[_-]' '{ print $2 }' <<<"${examplefile}" )"
 
 # Static files collection function
 do_files() {
@@ -82,7 +85,7 @@ do_files() {
     if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
         rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
+    ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
     echo "Copying files"
     mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
@@ -280,7 +283,7 @@ do_combine_portable() {
     if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
         rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}/${version}/${servertype}
+    ln -s ../../versions/${stability}/combined/${version} ${filedir}/${linkdir}/${version}/${servertype}
 
     echo "Cleaning up"
     rm -rf ${tempdir}
@@ -290,6 +293,7 @@ do_combine_portable() {
 do_deb_meta() {
     typename="${1}"
     platform="${typename%.*}"
+    servertype="meta"
     pushd ${metapackages_dir} 1>&2
 
     case ${platform} in
@@ -330,7 +334,7 @@ do_deb_meta() {
     if [[ -L ${filedir}/${linkdir}/${version}/${servertype} ]]; then
         rm -f ${filedir}/${linkdir}/${version}/${servertype}
     fi
-    ln -s ../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
+    ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
 
     echo "Copying files"
     mv ./*.deb ${filedir}/${releasedir}/
@@ -354,6 +358,24 @@ do_deb_meta() {
 # Docker Metaimage function
 do_docker_meta() {
     pushd ${metapackages_dir} 1>&2
+
+    # During a real release, we must check that both builder images are up; if one isn't, we're the first one done (or it failed), so return
+    if [[ -z ${is_unstable} ]]; then
+        server_ok=""
+        web_ok=""
+        for arch in ${docker_arches[@]}; do
+            curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/${version}-${arch} >/dev/null && server_ok="${server_ok}y"
+        done
+        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-web/tags/${version} >/dev/null && web_ok="y"
+        if [[ ${server_ok} != "yyy" || ${web_ok} != "y" ]]; then
+            return
+        fi
+    fi
+
+    # We're in a stable or rc build, and this image already exists, so abort
+    if curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin/tags/${version} >/dev/null; then
+        return
+    fi
 
     # Enable Docker experimental features (manifests)
     export DOCKER_CLI_EXPERIMENTAL=enabled
@@ -553,24 +575,6 @@ fi
 
 # Cleanup
 rm -r ${indir}/${build_id}
-
-# Update all the various entries in the PHP headers
-for platform in $( find "/srv/repository/releases/server" -mindepth 1 -maxdepth 1 -type d ); do
-    pushd ${platform}
-    pre_index_file="stable-pre/index.php"
-    current_array="$( grep '$directories = array' $file | awk -F '[()]' '{ print $2 }' )"
-    types=$( find "stable-pre/${version}" -mindepth 1 -maxdepth 1 -type l -exec basename {} \; )
-
-    new_array_paths=()
-    for rtype in $(types); do
-        new_array_paths+=("'${version}/${rtype}'")
-    done
-    new_array="$( IFS=, ; echo "${new_array_paths[*]}" )"
-
-    sed -i "s|${current_array}|${new_array}, ${current_array}|g" ${pre_index_file}
-
-    popd
-done
 
 # Run mirrorbits refresh
 mirrorbits refresh
