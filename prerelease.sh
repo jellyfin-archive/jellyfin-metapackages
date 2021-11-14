@@ -493,7 +493,6 @@ for directory in ${indir}/${build_id}/*; do
         ;;
         linux*)
             do_files ${typename}
-            do_combine_portable_linux
         ;;
         windows-installer*)
             # Modify the version info of the package if unstable
@@ -523,10 +522,11 @@ for directory in ${indir}/${build_id}/*; do
     esac
 done
 
-if [[ -z ${skip_docker} ]]; then
-    echo "> Processing docker"
-    do_docker_meta
-fi
+echo "> Processing portable Linux"
+do_combine_portable_linux
+
+echo "> Processing docker"
+do_docker_meta
 
 if [[ -f ${indir}/${build_id}/openapi.json ]]; then
     echo "> Processing OpenAPI spec"
