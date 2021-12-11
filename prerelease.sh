@@ -63,7 +63,7 @@ echo "**********" 1>&2
 set -o xtrace
 
 examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
-servertype="$( awk -F '[_-]' '{ print $2 }' <<<"${examplefile}" )"
+servertype="$( grep -E -o 'jellyfin-(server|web)_' <<<"${examplefile}" | sed 's/jellyfin-//g; s/_//g' )"
 echo "Servertype: ${servertype}"
 
 # Static files collection function
