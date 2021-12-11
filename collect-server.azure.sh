@@ -31,7 +31,7 @@ if [[ -z ${indir} || -z ${build_id} ]]; then
 fi
 
 if grep -- '-alpha\|-beta\|-rc' <<<"${tag}"; then
-    echo "THIS IS A PRERELEASE; RUN prerelease.sh MANUALLY passing in these arguments: $@"
+    echo "THIS IS A PRERELEASE; RUN prerelease.sh MANUALLY passing in these arguments: $@" 1>&2
     exit 0
 fi
 
