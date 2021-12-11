@@ -549,7 +549,7 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
 fi
 
 # Cleanup
-rm -r ${indir}/${build_id}
+#rm -r ${indir}/${build_id}
 
 # Run mirrorbits refresh
 mirrorbits refresh
