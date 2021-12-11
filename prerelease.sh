@@ -88,7 +88,7 @@ do_files() {
     fi
     ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/${servertype}
     echo "Copying files"
-    mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
+    cp ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*; do
         if [[ ${file} =~ ".sha256sum" ]]; then
@@ -154,7 +154,7 @@ do_combine_portable_linux() {
         echo "Correcting root directory naming"
         pushd ${tempdir} 1>&2
         server_dir="$( find . -maxdepth 1 -type d -name "jellyfin-server_*" | head -1 )"
-        mv ${server_dir} ./jellyfin_${version}
+        cp ${server_dir} ./jellyfin_${version}
         popd 1>&2
 
         echo "Unarchiving web archive"
@@ -163,7 +163,7 @@ do_combine_portable_linux() {
         echo "Correcting web directory naming"
         pushd ${tempdir}/jellyfin_${version}/ 1>&2
         web_dir="$( find . -maxdepth 1 -type d -name "jellyfin-web_*" | head -1 )"
-        mv ${web_dir} jellyfin-web
+        cp ${web_dir} jellyfin-web
         popd 1>&2
 
         echo "Creating combined tar archive"
@@ -241,7 +241,7 @@ do_combine_portable() {
     echo "Correcting root directory naming"
     pushd ${tempdir} 1>&2
     server_dir="$( find . -maxdepth 1 -type d -name "jellyfin-server_*" | head -1 )"
-    mv ${server_dir} ./jellyfin_${version}
+    cp ${server_dir} ./jellyfin_${version}
     popd 1>&2
 
     echo "Unarchiving web archive"
@@ -254,7 +254,7 @@ do_combine_portable() {
     echo "Correcting web directory naming"
     pushd ${tempdir}/jellyfin_${version}/ 1>&2
     web_dir="$( find . -maxdepth 1 -type d -name "jellyfin-web_*" | head -1 )"
-    mv ${web_dir} jellyfin-web
+    cp ${web_dir} jellyfin-web
     popd 1>&2
 
     pushd ${tempdir} 1>&2
@@ -331,7 +331,7 @@ do_deb_meta() {
     ln -s ../../${releasedir} ${filedir}/${linkdir}/${version}/meta
 
     echo "Copying files"
-    mv ./*.deb ${filedir}/${releasedir}/
+    cp ./*.deb ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*.deb; do
         if [[ ${file} =~ "*.sha256sum" ]]; then
@@ -539,10 +539,10 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
     mkdir -p ${api_dir}
     if ! diff -q ${indir}/${build_id}/openapi.json ${api_root}/${link_name}.json &>/dev/null; then
         # Only replace the OpenAPI spec if they differ
-        mv ${indir}/${build_id}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
+        cp ${indir}/${build_id}/openapi.json ${api_dir}/jellyfin-openapi-${api_version}.json
         if [[ -L ${api_root}/${link_name}.json ]]; then
             rm -f ${api_root}/${link_name}_previous.json
-            mv ${api_root}/${link_name}.json ${api_root}/${link_name}_previous.json
+            cp ${api_root}/${link_name}.json ${api_root}/${link_name}_previous.json
         fi
         ln -s ${api_dir}/jellyfin-openapi-${api_version}.json ${api_root}/${link_name}.json
     fi
