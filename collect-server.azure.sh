@@ -630,7 +630,15 @@ cleanup_unstable() {
         return
     fi
     filedir="/srv/repository/releases/server/${platform}/versions/unstable"
-    find ${filedir} -mindepth 2 -maxdepth 2 -type d -mtime +2 -exec rm -r {} \;
+    for typedir in ${filedir}/*; do
+        old_builds=( $( find ${typedir} -mindepth 1 -maxdepth 1 -type d | sort -rn ) )
+        # Always preserve at least the last three builds
+        if [[ ${#old_builds[@]} -gt 3 ]]; then
+            for build in ${old_builds[@]:3}; do
+                rm -r ${build}
+            done
+        fi
+    done
 }
 
 # For web, which does not build every platform, make copies so we parse sanely later
