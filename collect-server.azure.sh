@@ -446,7 +446,11 @@ do_deb_meta() {
         fi
     fi
 
-    sed -i "s/X.Y.Z/${version}${versend}/g" jellyfin.debian
+    if [[ -n ${is_unstable} ]]; then
+        sed -i "s/ (>= X.Y.Z)//g" jellyfin.debian
+    else
+        sed -i "s/X.Y.Z/${version}${versend}/g" jellyfin.debian
+    fi  
 
     echo "Building metapackage"
     equivs-build jellyfin.debian 1>&2
