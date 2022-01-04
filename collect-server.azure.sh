@@ -57,17 +57,8 @@ docker_arches=(
     "arm64"
     "armhf"
 )
-releases_debian=(
-    "stretch"
-    "buster"
-    "bullseye"
-)
-releases_ubuntu=(
-    "xenial"
-    "bionic"
-    "focal"
-    "groovy"
-)
+releases_debian=( $( grep Codename /srv/repository/debian/conf/distributions | awk '{ print $NF }' ) )
+releases_ubuntu=( $( grep Codename /srv/repository/ubuntu/conf/distributions | awk '{ print $NF }' ) )
 
 echo "**********" 1>&2
 date 1>&2
