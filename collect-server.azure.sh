@@ -227,7 +227,7 @@ do_combine_portable_linux() {
                 fi
             ;;
             web)
-                web_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${webtype}*.${filetype}" | head -1 )"
+                web_archive="$( find ${filedir}/${releasedir}/${version} -type f -name "jellyfin-${servertype}*.${filetype}" | head -1 )"
                 if [[ -z ${is_unstable} ]]; then
                     server_archive="$( find ${filedir}/${partnerreleasedir} -type f -name "*${version}*${arch}.${filetype}" -printf "%T@ %Tc %p\n" | sort -rn | head -1 | awk '{ print $NF }' )"
                 else
