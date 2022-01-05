@@ -154,7 +154,7 @@ do_combine_portable_linux() {
         echo "Correcting root directory naming"
         pushd ${tempdir} 1>&2
         server_dir="$( find . -maxdepth 1 -type d -name "jellyfin-server_*" | head -1 )"
-        cp ${server_dir} ./jellyfin_${version}
+        mv ${server_dir} ./jellyfin_${version}
         popd 1>&2
 
         echo "Unarchiving web archive"
@@ -163,7 +163,7 @@ do_combine_portable_linux() {
         echo "Correcting web directory naming"
         pushd ${tempdir}/jellyfin_${version}/ 1>&2
         web_dir="$( find . -maxdepth 1 -type d -name "jellyfin-web_*" | head -1 )"
-        cp ${web_dir} jellyfin-web
+        mv ${web_dir} jellyfin-web
         popd 1>&2
 
         echo "Creating combined tar archive"
@@ -241,7 +241,7 @@ do_combine_portable() {
     echo "Correcting root directory naming"
     pushd ${tempdir} 1>&2
     server_dir="$( find . -maxdepth 1 -type d -name "jellyfin-server_*" | head -1 )"
-    cp ${server_dir} ./jellyfin_${version}
+    mv ${server_dir} ./jellyfin_${version}
     popd 1>&2
 
     echo "Unarchiving web archive"
@@ -254,7 +254,7 @@ do_combine_portable() {
     echo "Correcting web directory naming"
     pushd ${tempdir}/jellyfin_${version}/ 1>&2
     web_dir="$( find . -maxdepth 1 -type d -name "jellyfin-web_*" | head -1 )"
-    cp ${web_dir} jellyfin-web
+    mv ${web_dir} jellyfin-web
     popd 1>&2
 
     pushd ${tempdir} 1>&2
