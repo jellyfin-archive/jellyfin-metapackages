@@ -779,15 +779,15 @@ rm -r ${indir}/${build_id}
 mirrorbits refresh
 
 # Build unstable plugins
-if [[ -n ${is_unstable} ]]; then
-    pushd ${repo_dir}
-    export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
-    for plugin in ${plugins_dir}/jellyfin-plugin-*; do
-        /srv/jellyfin/build-plugin.sh ${plugin} unstable
-        chown -R build:adm ${plugin}
-    done
-    popd
-fi
+#if [[ -n ${is_unstable} ]]; then
+#    pushd ${repo_dir}
+#    export JELLYFIN_REPO="/srv/repository/releases/plugin/manifest-unstable.json"
+#    for plugin in ${plugins_dir}/jellyfin-plugin-*; do
+#        /srv/jellyfin/build-plugin.sh ${plugin} unstable
+#        chown -R build:adm ${plugin}
+#    done
+#    popd
+#fi
 
 time_end=$( date +%s )
 time_total=$( echo "${time_end} - ${time_start}" | bc )
