@@ -14,7 +14,6 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     LC_ALL="en_US.UTF-8" \
     LANG="en_US.UTF-8" \
     LANGUAGE="en_US:en" \
-    JELLYFIN_MEDIA_DIR="/media" \
     JELLYFIN_DATA_DIR="/config" \
     JELLYFIN_CACHE_DIR="/cache" \
     JELLYFIN_CONFIG_DIR="/config/config" \
@@ -35,15 +34,15 @@ RUN apt-get update \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
- && mkdir -p ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
- && chmod 777 ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
+ && mkdir -p ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
+ && chmod 777 ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
 COPY --from=server /jellyfin /jellyfin
 COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
 EXPOSE 8096
-VOLUME ${JELLYFIN_MEDIA_DIR} ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
+VOLUME ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
 ENTRYPOINT [ "/jellyfin/jellyfin" ]
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
