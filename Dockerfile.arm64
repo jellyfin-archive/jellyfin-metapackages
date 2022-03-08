@@ -22,15 +22,14 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
 # Install dependencies:
-#   libomxil-bellagio0: needed for OpenMax IL
 #   curl: healcheck
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget apt-transport-https \
- && wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | apt-key add - \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget \
+ && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
  && echo 'deb [arch=arm64] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y libomxil-bellagio0 libomxil-bellagio-bin jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
- && apt-get remove gnupg wget apt-transport-https -y \
+ && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
+ && apt-get remove gnupg wget -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
