@@ -134,7 +134,7 @@ do_deb() {
     echo "Cleaning and exporting repository"
     reprepro -b ${repodir} deleteunreferenced
     reprepro -b ${repodir} export
-    chown -R root:adm ${repodir}
+    chown -R build:adm ${repodir}
     chmod -R g+w ${repodir}
 }
 
@@ -177,7 +177,7 @@ do_files() {
         sha256sum ${file} | sed 's, .*/, ,' > ${file}.sha256sum
     done
     echo "Cleaning repository"
-    chown -R root:adm ${filedir}
+    chown -R build:adm ${filedir}
     chmod -R g+w ${filedir}
 }
 
@@ -476,7 +476,7 @@ do_deb_meta() {
         echo "Cleaning and exporting repository"
         reprepro -b ${repodir} deleteunreferenced
         reprepro -b ${repodir} export
-        chown -R root:adm ${repodir}
+        chown -R build:adm ${repodir}
         chmod -R g+w ${repodir}
     fi
 
@@ -498,7 +498,7 @@ do_deb_meta() {
         sha256sum ${file} | sed 's, .*/, ,' > ${file}.sha256sum
     done
     echo "Cleaning repository"
-    chown -R root:adm ${filedir}
+    chown -R build:adm ${filedir}
     chmod -R g+w ${filedir}
 
     # Clean up our changes
