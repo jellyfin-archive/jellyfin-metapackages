@@ -23,10 +23,10 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
 ENV NVIDIA_DRIVER_CAPABILITIES="compute,video,utility"
 
 # https://github.com/intel/compute-runtime/releases
-ARG GMMLIB_VERSION=22.0.2
-ARG IGC_VERSION=1.0.10840
-ARG NEO_VERSION=22.15.22905
-ARG LEVEL_ZERO_VERSION=1.3.22905
+ARG GMMLIB_VERSION=22.1.2
+ARG IGC_VERSION=1.0.11104
+ARG NEO_VERSION=22.19.23136
+ARG LEVEL_ZERO_VERSION=1.3.23136
 
 # Install dependencies:
 # mesa-va-drivers: needed for AMD VAAPI. Mesa >= 20.1 is required for HEVC transcoding.
@@ -43,7 +43,7 @@ RUN apt-get update \
 # Do not use the intel-opencl-icd package from repo since they will not build with RELEASE_WITH_REGKEYS enabled.
  && mkdir intel-compute-runtime \
  && cd intel-compute-runtime \
- && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/intel-gmmlib_${GMMLIB_VERSION}_amd64.deb \
+ && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libigdgmm12_${GMMLIB_VERSION}_amd64.deb \
  && wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGC_VERSION}/intel-igc-core_${IGC_VERSION}_amd64.deb \
  && wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-${IGC_VERSION}/intel-igc-opencl_${IGC_VERSION}_amd64.deb \
  && wget https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/intel-opencl-icd_${NEO_VERSION}_amd64.deb \
