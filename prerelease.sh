@@ -62,6 +62,10 @@ echo "**********" 1>&2
 
 set -o xtrace
 
+pushd ${metapackages_dir}
+git pull --rebase || exit 1
+popd
+
 examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
 servertype="$( grep -E -o 'jellyfin-(server|web)_' <<<"${examplefile}" | sed 's/jellyfin-//g; s/_//g' )"
 echo "Servertype: ${servertype}"
