@@ -303,6 +303,7 @@ do_deb_meta() {
 
     releasedir="versions/stable-pre/meta/${version}"
     linkdir="stable-pre"
+    version="$( sed 's/-/~/g' <<<"${version}" )"
     versend=""
 
     sed -i "s/X.Y.Z/${version}${versend}/g" jellyfin.debian
