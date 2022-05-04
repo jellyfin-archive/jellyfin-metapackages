@@ -62,6 +62,10 @@ echo "**********" 1>&2
 
 set -o xtrace
 
+pushd ${metapackages_dir}
+git pull --rebase || exit 1
+popd
+
 examplefile="$( find ${indir}/${build_id} -type f \( -name "jellyfin-*.deb" -o -name "jellyfin_*.exe" \) | head -1 )"
 servertype="$( grep -E -o 'jellyfin-(server|web)_' <<<"${examplefile}" | sed 's/jellyfin-//g; s/_//g' )"
 echo "Servertype: ${servertype}"
@@ -303,9 +307,10 @@ do_deb_meta() {
 
     releasedir="versions/stable-pre/meta/${version}"
     linkdir="stable-pre"
+    versdeb="$( sed 's/-/~/g' <<<"${version}" )"
     versend=""
 
-    sed -i "s/X.Y.Z/${version}${versend}/g" jellyfin.debian
+    sed -i "s/X.Y.Z/${versdeb}${versend}/g" jellyfin.debian
 
     echo "Building metapackage"
     equivs-build jellyfin.debian 1>&2
