@@ -37,7 +37,7 @@ RUN apt-get update \
  && echo 'deb [arch=amd64] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
  && cat /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg openssl locales libfontconfig1 libfreetype6 \
+ && apt-get install --no-install-recommends --no-install-suggests -y mesa-va-drivers jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
 # Intel VAAPI Tone mapping dependencies:
 # Prefer NEO to Beignet since the latter one doesn't support Comet Lake or newer for now.
 # Do not use the intel-opencl-icd package from repo since they will not build with RELEASE_WITH_REGKEYS enabled.
