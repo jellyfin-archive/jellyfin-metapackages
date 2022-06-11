@@ -168,7 +168,7 @@ do_files() {
     fi
     ln -s ../${releasedir} ${filedir}/${linkdir}/${servertype}
     echo "Copying files"
-    mv ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
+    cp ${indir}/${build_id}/${typename}/* ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*; do
         if [[ ${file} =~ ".sha256sum" ]]; then
@@ -489,7 +489,7 @@ do_deb_meta() {
     fi
     ln -s ../${releasedir} ${filedir}/${linkdir}/meta
     echo "Copying files"
-    mv ./*.deb ${filedir}/${releasedir}/
+    cp ./*.deb ${filedir}/${releasedir}/
     echo "Creating sha256sums"
     for file in ${filedir}/${releasedir}/*.deb; do
         if [[ ${file} =~ "*.sha256sum" ]]; then
@@ -773,7 +773,7 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
 fi
 
 # Cleanup
-rm -r ${indir}/${build_id}
+#rm -r ${indir}/${build_id}
 
 # Run mirrorbits refresh
 mirrorbits refresh
