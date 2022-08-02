@@ -271,6 +271,11 @@ do_combine_portable_linux() {
         rm -rf ${tempdir}
     done
 
+    echo "Creating links"
+    if [[ -L ${filedir}/${linkdir} ]]; then
+        rm -f ${filedir}/${linkdir}
+    fi
+    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}
 }
 
 # Portable archive combination function
