@@ -780,7 +780,9 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
 fi
 
 # Cleanup
-#rm -r ${indir}/${build_id}
+if [[ -n ${is_unstable} ]]; then
+    rm -r ${indir}/${build_id}
+fi
 
 # Run mirrorbits refresh
 mirrorbits refresh
