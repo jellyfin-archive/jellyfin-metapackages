@@ -16,7 +16,7 @@ fi
 # Get our input arguments
 echo ${0} ${@} 1>&2
 version="${1}"
-posttag="${1}"
+posttag="${2}"
 
 # Abort if we're missing arguments
 if [[ -z ${version} || -z ${posttag} ]]; then
