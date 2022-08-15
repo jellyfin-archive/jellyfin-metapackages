@@ -20,6 +20,7 @@ posttag="${2}"
 
 # Abort if we're missing arguments
 if [[ -z ${version} || -z ${posttag} ]]; then
+    echo "Usage: $0 [current version e.g. 10.8.4] [supplemental post tag e.g. 1, 2, etc.]"
     exit 1
 fi
 
