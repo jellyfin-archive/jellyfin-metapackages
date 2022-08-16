@@ -84,10 +84,6 @@ do_docker_meta() {
         fi
     fi
 
-    # We're in a stable or rc build, and this image already exists, so abort
-    if curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin/tags/${version} >/dev/null; then
-        return
-    fi
 
     # Enable Docker experimental features (manifests)
     export DOCKER_CLI_EXPERIMENTAL=enabled
