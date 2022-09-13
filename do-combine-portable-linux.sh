@@ -12,6 +12,7 @@ linux_static_arches=(
     "amd64"
     "amd64-musl"
     "arm64"
+    "arm64-musl"
     "armhf"
 )
 docker_arches=(
