@@ -3,7 +3,7 @@ ARG TARGET_RELEASE=stable
 
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-amd64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 ENV HEALTHCHECK_URL=http://localhost:8096/health
 

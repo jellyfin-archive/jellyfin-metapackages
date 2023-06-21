@@ -4,7 +4,7 @@ ARG TARGET_RELEASE=stable
 FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-arm64 as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM arm64v8/debian:bullseye-slim
+FROM arm64v8/debian:bookworm-slim
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
 ENV HEALTHCHECK_URL=http://localhost:8096/health
