@@ -103,6 +103,7 @@ do_combine_portable_linux() {
         echo "Creating combined tar archive"
         pushd ${tempdir} 1>&2
         chown -R root:root ./
+        mkdir -p ${filedir}/versions/${stability}/combined/${version}/
         tar -czf ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz ./
         echo "Creating sha256sums"
         sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz.sha256sum

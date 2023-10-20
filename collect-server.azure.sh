@@ -262,6 +262,7 @@ do_combine_portable_linux() {
         echo "Creating combined tar archive"
         pushd ${tempdir} 1>&2
         chown -R root:root ./
+        mkdir -p ${filedir}/versions/${stability}/combined/${version}/
         tar -czf ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz ./
         echo "Creating sha256sums"
         sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}_${arch}.tar.gz.sha256sum
@@ -270,6 +271,11 @@ do_combine_portable_linux() {
         rm -rf ${tempdir}
     done
 
+    echo "Creating links"
+    if [[ -L ${filedir}/${linkdir} ]]; then
+        rm -f ${filedir}/${linkdir}
+    fi
+    ln -s ../versions/${stability}/combined/${version} ${filedir}/${linkdir}
 }
 
 # Portable archive combination function
@@ -367,6 +373,7 @@ do_combine_portable() {
     else
         echo "Creating combined tar archive"
         chown -R root:root ./
+        mkdir -p ${filedir}/versions/${stability}/combined/${version}/
         tar -czf ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz ./
         echo "Creating sha256sums"
         sha256sum ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz | sed 's, .*/, ,' > ${filedir}/versions/${stability}/combined/${version}/jellyfin_${version}${pkgend}.tar.gz.sha256sum
@@ -507,6 +514,12 @@ do_deb_meta() {
     popd 1>&2
 }
 
+function docker_tag_exists() {
+    . /srv/repository/docker-credentials
+    TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username": "'${UNAME}'", "password": "'${UPASS}'"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+    curl --silent -f --head -lL https://hub.docker.com/v2/repositories/$1/tags/$2/ > /dev/null
+}
+
 # Docker Metaimage function
 do_docker_meta() {
     pushd ${metapackages_dir} 1>&2
@@ -536,16 +549,20 @@ do_docker_meta() {
         server_ok=""
         web_ok=""
         for arch in ${docker_arches[@]}; do
-            curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-server/tags/${version}-${arch} >/dev/null && server_ok="${server_ok}y"
+            if docker_tag_exists jellyfin/jellyfin-server ${version}-${arch}; then
+                server_ok="${server_ok}y"
+            fi
         done
-        curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin-web/tags/${version} >/dev/null && web_ok="y"
+        if docker_tag_exists jellyfin/jellyfin-web ${version}; then
+            web_ok="y"
+        fi
         if [[ ${server_ok} != "yyy" || ${web_ok} != "y" ]]; then
             return
         fi
     fi
 
     # We're in a stable or rc build, and this image already exists, so abort
-    if curl --silent -f -lSL https://index.docker.io/v1/repositories/jellyfin/jellyfin/tags/${version} >/dev/null; then
+    if docker_tag_exists jellyfin/jellyfin ${version}; then
         return
     fi
 
@@ -773,7 +790,7 @@ if [[ -f ${indir}/${build_id}/openapi.json ]]; then
 fi
 
 # Cleanup
-#rm -r ${indir}/${build_id}
+rm -r ${indir}/${build_id}
 
 # Run mirrorbits refresh
 mirrorbits refresh
