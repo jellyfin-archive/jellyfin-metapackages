@@ -5,7 +5,7 @@ shopt -s extglob
 # Lists of supported architectures, Debian, and Ubuntu releases
 SUPPORTED_ARCHITECTURES='@(amd64|armhf|arm64)'
 SUPPORTED_DEBIAN_RELEASES='@(buster|bullseye|bookworm)'
-SUPPORTED_UBUNTU_RELEASES='@(bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy|kinetic|lunar)'
+SUPPORTED_UBUNTU_RELEASES='@(bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy|kinetic|lunar|mantic)'
 
 # Check that /etc/apt exists; if not, this isn't a valid distro for this script
 if [[ ! -d /etc/apt ]]; then
@@ -52,19 +52,20 @@ esac
 # Handle some known alternative base OS values with 1-to-1 mappings
 # Use the result as our repository base OS
 case "${BASE_OS}" in
-    raspbian)
-        # Raspbian uses our Debian repository
-        REPO_OS="debian"
-    ;;
     linuxmint)
         # Linux Mint can either be Debian- or Ubuntu-based, so pick the right one
         if grep -q "DEBIAN_CODENAME=" /etc/os-release &>/dev/null; then
-            VERSION="$( awk -F'=' '/^DEBIAN_CODENAME=/{ print $NF }' /etc/os-release )"
             REPO_OS="debian"
+            VERSION="$( awk -F'=' '/^DEBIAN_CODENAME=/{ print $NF }' /etc/os-release )"
         else
-            VERSION="$( awk -F'=' '/^UBUNTU_CODENAME=/{ print $NF }' /etc/os-release )"
             REPO_OS="ubuntu"
+            VERSION="$( awk -F'=' '/^UBUNTU_CODENAME=/{ print $NF }' /etc/os-release )"
         fi
+    ;;
+    raspbian)
+        # Raspbian uses our Debian repository
+        REPO_OS="debian"
+        VERSION="$( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release )"
     ;;
     neon)
         # Neon uses our Ubuntu repository
