@@ -20,7 +20,7 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
 # https://github.com/dlemstra/Magick.NET/issues/707#issuecomment-785351620
-ENV MALLOC_TRIM_THRESHOLD_=100000
+ENV MALLOC_TRIM_THRESHOLD_=131072
 
 # https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(Native-GPU-Support)
 ENV NVIDIA_VISIBLE_DEVICES="all"
