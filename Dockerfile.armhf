@@ -21,6 +21,9 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     JELLYFIN_WEB_DIR="/jellyfin/jellyfin-web" \
     JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
+# https://github.com/dlemstra/Magick.NET/issues/707#issuecomment-785351620
+ENV MALLOC_TRIM_THRESHOLD_=100000
+
 # Install dependencies:
 #   curl: healthcheck
 RUN apt-get update \
