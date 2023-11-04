@@ -1,6 +1,0 @@
-Types: deb
-URIs: https://repo.jellyfin.org/DISTRO
-Suites: CODENAME
-Components: main
-Architectures: ARCH
-Signed-By: /etc/apt/keyrings/jellyfin.gpg
