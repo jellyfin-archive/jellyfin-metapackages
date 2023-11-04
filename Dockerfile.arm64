@@ -1,10 +1,13 @@
 # By default build for stable; unstable must set this explicitly
 ARG TARGET_RELEASE=stable
+ARG DISTRO=debian
+ARG CODENAME=bookworm
+ARG ARCH=arm64
 
 FROM multiarch/qemu-user-static:x86_64-aarch64 as qemu
-FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-arm64 as server
+FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-${ARCH} as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM arm64v8/debian:bullseye-slim
+FROM arm64v8/debian:${CODENAME}-slim
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
 
 ENV HEALTHCHECK_URL=http://localhost:8096/health
@@ -21,14 +24,17 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
     JELLYFIN_WEB_DIR="/jellyfin/jellyfin-web" \
     JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
-# Install dependencies:
-#   curl: healcheck
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget \
- && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
- && echo 'deb [arch=arm64] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget
+COPY jellyfin.sources /etc/apt/sources.list.d/jellyfin.sources
+RUN mkdir /etc/apt/keyrings \
+ && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/jellyfin.gpg \
+ && sed -i -e "s/DISTRO/$DISTRO/" /etc/apt/sources.list.d/jellyfin.sources \
+ && sed -i -e "s/CODENAME/$CODENAME/" /etc/apt/sources.list.d/jellyfin.sources \
+ && sed -i -e "s/ARCH/$ARCH/" /etc/apt/sources.list.d/jellyfin.sources \
+ && cat /etc/apt/sources.list.d/jellyfin.sources \
  && apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
+ && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
  && apt-get remove gnupg wget -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
