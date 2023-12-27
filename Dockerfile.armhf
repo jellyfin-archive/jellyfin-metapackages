@@ -4,35 +4,25 @@ ARG TARGET_RELEASE=stable
 FROM multiarch/qemu-user-static:x86_64-arm as qemu
 FROM jellyfin/jellyfin-server:${TARGET_RELEASE}-armhf as server
 FROM jellyfin/jellyfin-web:${TARGET_RELEASE} as web
-FROM arm32v7/debian:bullseye-slim
+FROM arm32v7/debian:bookworm-slim
 COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
-
-ENV HEALTHCHECK_URL=http://localhost:8096/health
-
-# Default environment variables for the Jellyfin invocation
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
-    LC_ALL="en_US.UTF-8" \
-    LANG="en_US.UTF-8" \
-    LANGUAGE="en_US:en" \
-    JELLYFIN_DATA_DIR="/config" \
-    JELLYFIN_CACHE_DIR="/cache" \
-    JELLYFIN_CONFIG_DIR="/config/config" \
-    JELLYFIN_LOG_DIR="/config/log" \
-    JELLYFIN_WEB_DIR="/jellyfin/jellyfin-web" \
-    JELLYFIN_FFMPEG="/usr/lib/jellyfin-ffmpeg/ffmpeg"
 
 # https://github.com/dlemstra/Magick.NET/issues/707#issuecomment-785351620
 ENV MALLOC_TRIM_THRESHOLD_=131072
+# http://stackoverflow.com/questions/48162574/ddg#49462622
+ARG APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
+
+ENV JELLYFIN_DATA_DIR=/config
+ENV JELLYFIN_CACHE_DIR=/cache
 
 # Install dependencies:
-#   curl: healthcheck
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl wget \
+ && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl apt-transport-https \
  && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
- && echo 'deb [arch=armhf] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
+ && echo "deb [arch=$( dpkg --print-architecture )] https://repo.jellyfin.org/debian$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release ) $( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release ) main" > /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
- && apt-get remove gnupg wget -y \
+ && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
+ && apt-get remove gnupg apt-transport-https -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
  && rm -rf /var/lib/apt/lists/* \
@@ -40,12 +30,19 @@ RUN apt-get update \
  && chmod 777 ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR} \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+
+ENV HEALTHCHECK_URL=http://localhost:8096/health
+
 COPY --from=server /jellyfin /jellyfin
 COPY --from=web /jellyfin-web /jellyfin/jellyfin-web
 
 EXPOSE 8096
 VOLUME ${JELLYFIN_DATA_DIR} ${JELLYFIN_CACHE_DIR}
-ENTRYPOINT [ "/jellyfin/jellyfin" ]
+ENTRYPOINT [ "/jellyfin/jellyfin", \
+            "--ffmpeg", "/usr/lib/jellyfin-ffmpeg/ffmpeg"]
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
      CMD curl -Lk -fsS "${HEALTHCHECK_URL}" || exit 1
