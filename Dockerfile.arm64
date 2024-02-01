@@ -24,6 +24,11 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT="1" \
 # https://github.com/dlemstra/Magick.NET/issues/707#issuecomment-785351620
 ENV MALLOC_TRIM_THRESHOLD_=131072
 
+# https://github.com/tsukumijima/libmali-rockchip
+ARG MALI_PKG_VER="1.9-1_arm64"
+ARG MALI_PKG_TAG="v1.9-1-3381696"
+ARG MALI_PKG_CFG="valhall-g610-g13p0-wayland-gbm"
+
 # Install dependencies:
 #   curl: healcheck
 RUN apt-get update \
@@ -32,6 +37,13 @@ RUN apt-get update \
  && echo 'deb [arch=arm64] https://repo.jellyfin.org/debian bullseye main' > /etc/apt/sources.list.d/jellyfin.list \
  && apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg5 openssl locales libfontconfig1 libfreetype6 \
+# Rockchip RK3588 libmali OpenCL dependencies:
+ && mkdir libmali-rockchip \
+ && cd libmali-rockchip \
+ && wget https://github.com/tsukumijima/libmali-rockchip/releases/download/${MALI_PKG_TAG}/libmali-${MALI_PKG_CFG}_${MALI_PKG_VER}.deb \
+ && apt-get install --no-install-recommends --no-install-suggests -y ./*.deb \
+ && cd .. \
+ && rm -rf libmali-rockchip \
  && apt-get remove gnupg wget -y \
  && apt-get clean autoclean -y \
  && apt-get autoremove -y \
