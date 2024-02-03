@@ -22,21 +22,24 @@ ARG IGC_VERSION=1.0.15770.11
 ARG NEO_VERSION=23.52.28202.14
 ARG LEVEL_ZERO_VERSION=1.3.28202.14
 
-# Install dependencies:
+# Add Jellyfin repository :
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl \
  && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
  && export VERSION_OS="$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release )" \
  && export VERSION_CODENAME="$( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release )" \
  && export DPKG_ARCHITECTURE="$( dpkg --print-architecture )" \
- && cat <<EOF | sudo tee /etc/apt/sources.list.d/jellyfin.sources \
- && Types: deb \
- && URIs: https://repo.jellyfin.org/${VERSION_OS} \
- && Suites: ${VERSION_CODENAME} \
- && Components: main \
- && Architectures: ${DPKG_ARCHITECTURE} \
- && Signed-By: /etc/apt/keyrings/jellyfin.gpg \
- && apt-get update \
+ && cat <<EOF | tee /etc/apt/sources.list.d/jellyfin.sources
+Types: deb 
+URIs: https://repo.jellyfin.org/${VERSION_OS} 
+Suites: ${VERSION_CODENAME} 
+Components: main 
+Architectures: ${DPKG_ARCHITECTURE} 
+Signed-By: /etc/apt/trusted.gpg.d/debian-jellyfin.gpg
+EOF
+
+# Install dependencies:
+RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
 # Intel VAAPI Tone mapping dependencies:
 # Prefer NEO to Beignet since the latter one doesn't support Comet Lake or newer for now.

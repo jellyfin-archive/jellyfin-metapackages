@@ -20,26 +20,29 @@ ARG MALI_PKG_VER="1.9-1_arm64"
 ARG MALI_PKG_TAG="v1.9-1-3381696"
 ARG MALI_PKG_CFG="valhall-g610-g13p0-wayland-gbm"
 
-# Install dependencies:
+# Add Jellyfin repository :
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl \
  && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
  && export VERSION_OS="$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release )" \
  && export VERSION_CODENAME="$( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release )" \
  && export DPKG_ARCHITECTURE="$( dpkg --print-architecture )" \
- && cat <<EOF | sudo tee /etc/apt/sources.list.d/jellyfin.sources \
- && Types: deb \
- && URIs: https://repo.jellyfin.org/${VERSION_OS} \
- && Suites: ${VERSION_CODENAME} \
- && Components: main \
- && Architectures: ${DPKG_ARCHITECTURE} \
- && Signed-By: /etc/apt/keyrings/jellyfin.gpg \
- && apt-get update \
+ && cat <<EOF | tee /etc/apt/sources.list.d/jellyfin.sources
+Types: deb 
+URIs: https://repo.jellyfin.org/${VERSION_OS} 
+Suites: ${VERSION_CODENAME} 
+Components: main 
+Architectures: ${DPKG_ARCHITECTURE} 
+Signed-By: /etc/apt/trusted.gpg.d/debian-jellyfin.gpg
+EOF
+
+# Install dependencies :
+RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
  # Rockchip RK3588 libmali OpenCL dependencies:
  && mkdir libmali-rockchip \
  && cd libmali-rockchip \
- && wget https://github.com/tsukumijima/libmali-rockchip/releases/download/${MALI_PKG_TAG}/libmali-${MALI_PKG_CFG}_${MALI_PKG_VER}.deb \
+ && curl -LO https://github.com/tsukumijima/libmali-rockchip/releases/download/${MALI_PKG_TAG}/libmali-${MALI_PKG_CFG}_${MALI_PKG_VER}.deb \
  && apt-get install --no-install-recommends --no-install-suggests -y ./*.deb \
  && cd .. \
  && rm -rf libmali-rockchip \

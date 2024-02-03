@@ -15,21 +15,24 @@ ARG APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 ENV JELLYFIN_DATA_DIR=/config
 ENV JELLYFIN_CACHE_DIR=/cache
 
-# Install dependencies:
+# Add Jellyfin repository :
 RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y ca-certificates gnupg curl \
  && curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/debian-jellyfin.gpg \
  && export VERSION_OS="$( awk -F'=' '/^ID=/{ print $NF }' /etc/os-release )" \
  && export VERSION_CODENAME="$( awk -F'=' '/^VERSION_CODENAME=/{ print $NF }' /etc/os-release )" \
  && export DPKG_ARCHITECTURE="$( dpkg --print-architecture )" \
- && cat <<EOF | sudo tee /etc/apt/sources.list.d/jellyfin.sources \
- && Types: deb \
- && URIs: https://repo.jellyfin.org/${VERSION_OS} \
- && Suites: ${VERSION_CODENAME} \
- && Components: main \
- && Architectures: ${DPKG_ARCHITECTURE} \
- && Signed-By: /etc/apt/keyrings/jellyfin.gpg \
- && apt-get update \
+ && cat <<EOF | tee /etc/apt/sources.list.d/jellyfin.sources
+Types: deb 
+URIs: https://repo.jellyfin.org/${VERSION_OS} 
+Suites: ${VERSION_CODENAME} 
+Components: main 
+Architectures: ${DPKG_ARCHITECTURE} 
+Signed-By: /etc/apt/trusted.gpg.d/debian-jellyfin.gpg
+EOF
+
+# Install dependencies:
+RUN apt-get update \
  && apt-get install --no-install-recommends --no-install-suggests -y jellyfin-ffmpeg6 openssl locales libfontconfig1 libfreetype6 \
  && apt-get remove gnupg -y \
  && apt-get clean autoclean -y \
