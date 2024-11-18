@@ -1,3 +1,9 @@
+# Obsoletion Notice
+
+**This repository has been deprecated.**
+
+For building the server, please see [the packaging repository](https://github.com/jellyfin/jellyfin-packaging).
+
 # Jellyfin Metapackages
 
 This repository contains the various Jellyfin metapackage definitions. With the build split for the 10.6.0 release, the [main server](https://github.com/jellyfin/jellyfin) and [web client](https://github.com/jellyfin/jellyfin-web) are built separately, in order to ensure that both of them are unique and there is no built-time cross dependencies between the two repositories. This simplifies building for releases, as well as enables per-PR "unstable" builds as opposed to timed "daily" builds.
