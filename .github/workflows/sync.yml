@@ -1,0 +1,51 @@
+name: Sync DockerHub images with GHCR 🔁
+
+## This workflow is a temporal solution for having all our docker images synced to GHCR. However,
+## as soon as all the repo's CI is migrated to GitHub Actions, this can be removed.
+##
+## Project tracking the progress: https://github.com/orgs/jellyfin/projects/31
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Image sync 🔁
+    # Errors will probably be caused by excesses in API quota, so we can safely continue.
+    # Remaining workflows will be removed in the next scheduled run.
+    continue-on-error: true 
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - 'jellyfin/jellyfin'
+
+    steps:
+      - name: Clone repository
+      - uses: actions/checkout@v2.3.4
+
+      # The 'echo' command masks the environment variable
+      - name: Prepare environment
+        run: chmod +x sync_image_ghcr.sh && echo "::add-mask::${GITHUB_TOKEN}"
+
+      ## Logging in to DockerHub allows for more pulls without hitting DockerHub's quota (100 vs 200).
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1.10.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1.10.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.JF_BOT_TOKEN }}
+
+      - name: Run syncing script
+        run: ./sync_image_ghcr.sh ${{ matrix.image }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.JF_BOT_TOKEN }}
