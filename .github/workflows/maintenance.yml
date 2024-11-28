@@ -1,0 +1,105 @@
+name: Org-wide maintenance 🧰
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  workflow_removal:
+    runs-on: ubuntu-latest
+    name: Workflow cleanup 🧹👷‍♂️
+    # Errors will probably be caused by excesses in API quota, so we can safely continue.
+    # Remaining workflows will be removed in the next scheduled run.
+    continue-on-error: true 
+    strategy:
+      fail-fast: false
+      matrix:
+        repo:
+          - 'jellyfin/jellyfin'
+          - 'jellyfin/jellyfin-web'
+          - 'jellyfin/jellyfin-androidtv'
+          - 'jellyfin/jellyfin-android'
+          - 'jellyfin/jellyfin-chromecast'
+          - 'jellyfin/jellyfin-sdk-csharp'
+          - 'jellyfin/jellyfin-sdk-kotlin'
+          - 'jellyfin/jellyfin-sdk-swift'
+          - 'jellyfin/jellyfin-client-axios'
+          - 'jellyfin/jellyfin-roku'
+          - 'jellyfin/jellyfin-vue'
+          - 'jellyfin/jellyfin-webos'
+          - 'jellyfin/jellyfin-plugin-anilist'
+          - 'jellyfin/jellyfin-plugin-anisearch'
+          - 'jellyfin/jellyfin-plugin-artwork'
+          - 'jellyfin/jellyfin-plugin-anidb'
+          - 'jellyfin/jellyfin-plugin-webhook'
+          - 'jellyfin/jellyfin-plugin-tvmaze'
+          - 'jellyfin/jellyfin-plugin-ldpauth'
+          - 'jellyfin/jellyfin-plugin-tvdb'
+          - 'jellyfin/jellyfin-plugin-fanart'
+          - 'jellyfin/jellyfin-plugin-tvheadend'
+          - 'jellyfin/jellyfin-plugin-bookshelf'
+          - 'jellyfin/jellyfin-plugin-opensubtitles'
+          - 'jellyfin/jellyfin-plugin-covertartarchive'
+          - 'jellyfin/jellyfin-plugin-kodisyncqueue'
+          - 'jellyfin/jellyfin-plugin-nextpvr'
+          - 'jellyfin/jellyfin-plugin-playbackreporting'
+          - 'jellyfin/jellyfin-plugin-musicbrainz'
+          - 'jellyfin/jellyfin-plugin-trakt'
+          - 'jellyfin/jellyfin-plugin-reports'
+          - 'jellyfin/jellyfin-plugin-autoorganize'
+          - 'jellyfin/jellyfin-plugin-tmdb'
+          - 'jellyfin/jellyfin-plugin-omdb'
+          - 'jellyfin/jellyfin-plugin-kitsu'
+          - 'jellyfin/jellyfin-plugin-tmdbboxsets'
+          - 'jellyfin/jellyfin-plugin-template'
+          - 'jellyfin/jellyfin-meta-plugins'
+          - 'jellyfin/jellyfin-media-player'
+          - 'jellyfin/jellyfin-mpv-shim'
+          - 'jellyfin/jellyfin-expo'
+          - 'jellyfin/jellyfin-meta'
+          - 'jellyfin/jellyfin-artwork'
+          - 'jellyfin/jellyfin.org'
+          - 'jellyfin/jellyfin-docs'
+          - 'jellyfin/jellyfin-kodi'
+          - 'jellyfin/jellyfin-metapackages'
+          - 'jellyfin/jellyfin-ffmpeg'
+          - 'jellyfin/Swiftfin'
+          - 'jellyfin/jellyfin-apiclient-javascript'
+          - 'jellyfin/jellyfin-exoplayer-ffmpeg-extension'
+          - 'jellyfin/Jellyfin.XmlTv'
+          - 'jellyfin/JavascriptSubtitlesOctopus'
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Run deletion script 🗑
+        run: ./delete_workflows.sh ${{ matrix.repo }}
+        working-directory: ./.github/workflows/maintenance
+        env:
+          GITHUB_TOKEN: ${{ secrets.JF_BOT_TOKEN }}
+
+  dangling_images_removal:
+    runs-on: ubuntu-latest
+    name: Cleanup dangling images from GHCR 🧹📦
+    # Errors will probably be caused by excesses in API quota, so we can safely continue.
+    # Remaining workflows will be removed in the next scheduled run.
+    continue-on-error: true
+    # Pay attention that the org name is not necessary here, as gh will automatically take the one from the logged in user.
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - 'jellyfin'
+          - 'jellyfin-vue'
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Run deletion script 🗑
+        run: ./delete_ghcr_dangling_images.sh ${{ matrix.container }}
+        working-directory: ./.github/workflows/maintenance
+        env:
+          GITHUB_TOKEN: ${{ secrets.JF_BOT_TOKEN }}
